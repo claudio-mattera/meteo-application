@@ -1,0 +1,104 @@
+#!/usr/bin/python
+
+from Adafruit_BMP085 import BMP085
+
+class PressureReader(object):
+
+    ULTRALOWPOWER_MODE = 0
+    STANDARD_MODE      = 1
+    HIRES_MODE         = 2
+    ULTRAHIRES_MODE    = 3
+
+    def __init__(self, mode=STANDARD_MODE, address=0x77):
+        self.bmp = BMP085(address, mode)
+
+    def name(self):
+        return 'pressure'
+
+    def fields(self):
+        return ['Temperature', 'Pressure', 'Altitude']
+
+    def readValues(self):
+        temperature = self.bmp.readTemperature()
+        pressure = self.bmp.readPressure()
+
+        # To calculate altitude based on an estimated mean sea level pressure
+        # (1013.25 hPa) call the function as follows, but this won't be very
+        # accurate.
+
+        # To specify a more accurate altitude, enter the correct mean sea level
+        # pressure level.  For example, if the current pressure level is 1023.50
+        # hPa enter 102350 since we include two decimal places in the integer
+        # value altitude = bmp.readAltitude(102350).
+        altitude = self.bmp.readAltitude()
+
+        return {
+            'Temperature': temperature,
+            'Pressure': pressure,
+            'Altitude': altitude
+        }
+
+
+class HumidityReader(object):
+
+    def __init__(self):
+        pass
+
+    def name(self):
+        return 'humidity'
+
+    def fields(self):
+        return ['Temperature', 'Humidity']
+
+    def readValues(self):
+        temperature = None
+        humidity = None
+
+        return {
+            'Temperature': temperature,
+            'Humidity': humidity
+        }
+
+
+class WindReader(object):
+
+    def __init__(self):
+        pass
+
+    def name(self):
+        return 'wind'
+
+    def fields(self):
+        return ['Speed', 'Direction']
+
+    def readValues(self):
+        speed = None
+        direction = None
+
+        return {
+            'Speed': speed,
+            'Direction': direction
+        }
+
+
+class LightReader(object):
+
+    def __init__(self):
+        pass
+
+    def name(self):
+        return 'light'
+
+    def fields(self):
+        return ['Infrared', 'Visible', 'Ultraviolet']
+
+    def readValues(self):
+        infrared = None
+        visible = None
+        ultraviolet = None
+
+        return {
+            'Infrared': infrared,
+            'Visible': visible,
+            'Ultraviolet': ultraviolet
+        }
