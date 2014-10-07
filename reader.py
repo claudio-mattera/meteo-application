@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from Adafruit_BMP085 import BMP085
+from BH1750 import BH1750
 
 class PressureReader(object):
 
@@ -83,8 +84,15 @@ class WindReader(object):
 
 class LightReader(object):
 
-    def __init__(self):
-        pass
+    CONTINUOUS_HIGH_RES_MODE   = 0x10
+    CONTINUOUS_HIGH_RES_MODE_2 = 0x11
+    CONTINUOUS_LOW_RES_MODE    = 0x13
+    ONE_TIME_HIGH_RES_MODE     = 0x20
+    ONE_TIME_HIGH_RES_MODE_2   = 0x21
+    ONE_TIME_LOW_RES_MODE      = 0x23
+
+    def __init__(self, mode=ONE_TIME_HIGH_RES_MODE_2, address=0x23):
+        self.bh1750 = BH1750(address, mode)
 
     def name(self):
         return 'light'
@@ -94,7 +102,7 @@ class LightReader(object):
 
     def readValues(self):
         infrared = None
-        visible = None
+        visible = self.bh1750.readLight()
         ultraviolet = None
 
         return {
