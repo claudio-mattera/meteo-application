@@ -27,13 +27,33 @@ CONFIGURATIONS = {
 }
 
 
+def estimate_light():
+    from BH1750 import BH1750
+    sensor = BH1750()
+    light_level = sensor.readLight()
+    return light_level
+
+
 def parse_resolution(string):
     [width, height] = string.split('x')
     return (int(width), int(height))
 
 
+def get_configuration(arguments):
+    if arguments.light_threshold:
+        light_threshold = max(200, arguments.light_threshold)
+        light_level = estimate_light()
+        if light_level < light_threshold:
+            configuration = CONFIGURATIONS['night']
+        else:
+            configuration = CONFIGURATIONS[arguments.configuration]
+    else:
+        configuration = CONFIGURATIONS[arguments.configuration]
+    return configuration
+
+
 def take_picture(arguments):
-    configuration = CONFIGURATIONS[arguments.configuration]
+    configuration = get_configuration(arguments)
     if arguments.timestamp:
         timestamp = time.strftime("%Y-%m-%d %H-%M-%S") + ".jpg"
         filename = arguments.filename + timestamp
@@ -95,6 +115,10 @@ def parse_command_line():
         default=(2592, 1944),
         action=StorePairAction,
         help='Image resolution, e.g. 1024x768')
+    parser.add_argument(
+        '-l', '--light-threshold',
+        type=int,
+        help='Light threshold below which night mode is used')
     parser.add_argument(
         '-c', '--configuration',
         default='auto',
