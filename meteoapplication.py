@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import logging
 from reader import *
@@ -10,10 +10,12 @@ class Application:
         args = self.parseCommandLine()
         self.setupLogging(args)
         monitor = self.createMonitor(args)
+        internalReader = InternalReader()
         pressureReader = PressureReader(args.pressure_accuracy)
         humidityReader = HumidityReader()
         windReader = WindReader()
         lightReader = LightReader()
+        monitor.attachReader(internalReader)
         monitor.attachReader(pressureReader)
         monitor.attachReader(humidityReader)
         monitor.attachReader(windReader)

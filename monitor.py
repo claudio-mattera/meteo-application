@@ -56,12 +56,14 @@ class DatabaseMonitor(SingletonMonitor):
             connection.execute(
                 "INSERT INTO MeteoData \
                     (dateTime, \
+                     internalTemperature, \
                      pressureTemperature, pressurePressure, pressureAltitude, \
                      humidityTemperature, humidityHumidity, \
                      windSpeed, windDirection, \
                      lightInfrared, lightVisible, lightUltraviolet) \
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (dateTime,
+                    reading['internalTemperature'],
                     reading['pressureTemperature'],
                     reading['pressurePressure'],
                     reading['pressureAltitude'],
@@ -82,6 +84,7 @@ class DatabaseMonitor(SingletonMonitor):
             connection.execute(
                 '''CREATE TABLE IF NOT EXISTS MeteoData
                    (dateTime             TEXT  PRIMARY KEY  NOT NULL,
+                    internalTemperature  REAL,
                     pressureTemperature  REAL,
                     pressurePressure     REAL,
                     pressureAltitude     REAL,
@@ -115,7 +118,8 @@ class FileMonitor(SingletonMonitor):
             file.write(readingString)
 
     def fields(self):
-        return ['pressureTemperature', 'pressurePressure', 'pressureAltitude',
+        return ['internalTemperature',
+                'pressureTemperature', 'pressurePressure', 'pressureAltitude',
                 'humidityTemperature', 'humidityHumidity',
                 'windSpeed', 'windDirection',
                 'lightInfrared', 'lightVisible', 'lightUltraviolet']

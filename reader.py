@@ -110,3 +110,25 @@ class LightReader(object):
             'Visible': visible,
             'Ultraviolet': ultraviolet
         }
+
+class InternalReader(object):
+
+    def __init__(self):
+        pass
+
+    def name(self):
+        return 'internal'
+
+    def fields(self):
+        return ['Temperature']
+
+    def readValues(self):
+        import subprocess
+        args = ['/opt/vc/bin/vcgencmd', 'measure_temp']
+        output = subprocess.check_output(args)
+        # Output has form "temp=XX.X'C\n"
+        temperature = float(output[5:-3])
+
+        return {
+            'Temperature': temperature
+        }
