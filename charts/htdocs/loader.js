@@ -26,8 +26,14 @@ var pressureOptions = {
     x: 'date',
     xFormat: '%Y-%m-%d %H:%M:%S',
     axes: {
+      internal_temperature: 'y',
       temperature: 'y',
       pressure: 'y2'
+    },
+    names: {
+      internal_temperature: 'Internal Temperature',
+      temperature: 'External Temperature',
+      pressure: 'Pressure'
     }
   },
   grid: {
@@ -82,8 +88,14 @@ var lightOptions = {
     x: 'date',
     xFormat: '%Y-%m-%d %H:%M:%S',
     axes: {
+      internal_temperature: 'y',
       temperature: 'y',
       light: 'y2'
+    },
+    names: {
+      internal_temperature: 'Internal Temperature',
+      temperature: 'External Temperature',
+      light: 'Light'
     }
   },
   grid: {
