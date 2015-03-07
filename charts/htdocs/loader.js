@@ -181,6 +181,6 @@ function updateChart() {
 }
 
 function setupNextUpdate() {
-  var FIVE_MINUTES = 5 * 60 * 1000;
-  timeoutID = window.setTimeout(updateChart, FIVE_MINUTES);
+  var ONE_HOUR = 60 * 60 * 1000;
+  timeoutID = window.setTimeout(updateChart, ONE_HOUR);
 }
