@@ -1,5 +1,6 @@
 body {
     background-color: Gainsboro;
+    font-family: sans-serif;
 }
 .regionSun rect {
     fill: yellow;
