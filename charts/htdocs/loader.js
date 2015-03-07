@@ -128,7 +128,7 @@ var lightOptions = {
         position: 'outer-middle'
       },
       tick: {
-        format: function (d) { return d3.round(d, 2) + " LUX"; }
+        format: function (d) { return d3.round(d, 2) + " lx"; }
       }
     }
   },
