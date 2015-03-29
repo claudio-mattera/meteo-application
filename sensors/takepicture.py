@@ -67,13 +67,8 @@ def get_configuration(arguments):
     return configuration
 
 
-def take_picture(arguments):
+def capture_image(arguments):
     configuration = get_configuration(arguments)
-    if arguments.timestamp:
-        timestamp = time.strftime("%Y-%m-%d %H-%M-%S") + ".jpg"
-        filename = arguments.filename + timestamp
-    else:
-        filename = arguments.filename
 
     stream = io.BytesIO()
     with picamera.PiCamera() as camera:
@@ -94,10 +89,21 @@ def take_picture(arguments):
         logging.info('Capturing image')
         camera.capture(stream, format='jpeg')
     stream.seek(0)
-    image = Image.open(stream)
+    return Image.open(stream)
 
+
+def save_image(image, arguments):
+    if arguments.timestamp:
+        timestamp = time.strftime("%Y-%m-%d %H-%M-%S") + ".jpg"
+        filename = arguments.filename + timestamp
+    else:
+        filename = arguments.filename
     logging.info('Saving image')
     image.save(filename, quality=95, optimize=True)
+
+def take_picture(arguments):
+    image = capture_image(arguments)
+    save_image(image, arguments)
 
 
 class StorePairAction(argparse.Action):
