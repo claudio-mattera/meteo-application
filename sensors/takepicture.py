@@ -83,7 +83,7 @@ def capture_image(arguments):
         if 'exposure_mode' in configuration and configuration['exposure_mode'] == 'off':
             # Give the camera a good long time to measure AWB
             # (you may wish to use fixed AWB instead)
-            logging.info('Auto-measuing AWB')
+            logging.info('Auto-measuring AWB')
             time.sleep(10)
 
         logging.info('Capturing image')
