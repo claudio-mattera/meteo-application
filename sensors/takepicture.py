@@ -101,8 +101,19 @@ def save_image(image, arguments):
     logging.info('Saving image')
     image.save(filename, quality=95, optimize=True)
 
+
+def is_invalid(image):
+    return True
+
+
 def take_picture(arguments):
     image = capture_image(arguments)
+
+    if is_invalid(image):
+        logging.warning('Invalid image, releasing light threshold option')
+        arguments.light_threshold = 0
+        image = capture_image(arguments)
+
     save_image(image, arguments)
 
 
