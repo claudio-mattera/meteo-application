@@ -7,6 +7,7 @@ import argparse
 import logging
 import io
 from PIL import Image
+from PIL import ImageStat
 
 
 CONFIGURATIONS = {
@@ -103,7 +104,8 @@ def save_image(image, arguments):
 
 
 def is_invalid(image):
-    return True
+    stat = ImageStat.Stat(image)
+    return max(stat.stddev) < 1
 
 
 def take_picture(arguments):
