@@ -5,6 +5,9 @@ import time
 from fractions import Fraction
 import argparse
 import logging
+import io
+from PIL import Image
+
 
 CONFIGURATIONS = {
     'auto': {
@@ -72,6 +75,7 @@ def take_picture(arguments):
     else:
         filename = arguments.filename
 
+    stream = io.BytesIO()
     with picamera.PiCamera() as camera:
         camera.hflip = arguments.hflip
         camera.vflip = arguments.vflip
@@ -88,7 +92,12 @@ def take_picture(arguments):
             time.sleep(10)
 
         logging.info('Capturing image')
-        camera.capture(filename)
+        camera.capture(stream, format='jpeg')
+    stream.seek(0)
+    image = Image.open(stream)
+
+    logging.info('Saving image')
+    image.save(filename, quality=95, optimize=True)
 
 
 class StorePairAction(argparse.Action):
