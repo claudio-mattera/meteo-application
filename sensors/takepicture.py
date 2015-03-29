@@ -4,7 +4,7 @@ import picamera
 import time
 from fractions import Fraction
 import argparse
-
+import logging
 
 CONFIGURATIONS = {
     'auto': {
@@ -41,6 +41,7 @@ def is_below_light_threshold(threshold):
     except IOError as e:
         import errno
         if e.errno == errno.EACCES:
+            logging.warning('Access to light sensor denied')
             return False
         raise
 
@@ -54,6 +55,7 @@ def get_configuration(arguments):
     if arguments.light_threshold:
         light_threshold = max(200, arguments.light_threshold)
         if is_below_light_threshold(light_threshold):
+            logging.info('Below light threshold, forcing night configuration')
             configuration = CONFIGURATIONS['night']
         else:
             configuration = CONFIGURATIONS[arguments.configuration]
@@ -82,8 +84,10 @@ def take_picture(arguments):
         if 'exposure_mode' in configuration and configuration['exposure_mode'] == 'off':
             # Give the camera a good long time to measure AWB
             # (you may wish to use fixed AWB instead)
+            logging.info('Auto-measuing AWB')
             time.sleep(10)
 
+        logging.info('Capturing image')
         camera.capture(filename)
 
 
@@ -101,6 +105,10 @@ class StorePairAction(argparse.Action):
 def parse_command_line():
     parser = argparse.ArgumentParser(
         description='Takes a picture with the camera')
+    parser.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        help='Increase logging')
     parser.add_argument(
         '-f', '--filename',
         default='image.jpg',
@@ -139,4 +147,6 @@ def parse_command_line():
 
 if __name__ == '__main__':
     arguments = parse_command_line()
+    if arguments.verbose:
+        logging.basicConfig(level=logging.INFO)
     take_picture(arguments)
