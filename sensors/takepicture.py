@@ -34,6 +34,17 @@ def estimate_light():
     return light_level
 
 
+def is_below_light_threshold(threshold):
+    try:
+        light_level = estimate_light()
+        return light_level < threshold
+    except IOError as e:
+        import errno
+        if e.errno == errno.EACCES:
+            return False
+        raise
+
+
 def parse_resolution(string):
     [width, height] = string.split('x')
     return (int(width), int(height))
@@ -42,8 +53,7 @@ def parse_resolution(string):
 def get_configuration(arguments):
     if arguments.light_threshold:
         light_threshold = max(200, arguments.light_threshold)
-        light_level = estimate_light()
-        if light_level < light_threshold:
+        if is_below_light_threshold(light_threshold):
             configuration = CONFIGURATIONS['night']
         else:
             configuration = CONFIGURATIONS[arguments.configuration]
@@ -82,7 +92,7 @@ class StorePairAction(argparse.Action):
         if nargs is not None:
             raise ValueError("nargs not allowed")
         super(StorePairAction, self).__init__(option_strings, dest, **kwargs)
-    
+
     def __call__(self, parser, namespace, values, option_string=None):
         values = parse_resolution(values)
         setattr(namespace, self.dest, values)
