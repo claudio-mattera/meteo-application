@@ -48,7 +48,7 @@ def write_output(destination_dir, name, data):
 
 
 def main():
-    destination_dir = '/var/www'
+    destination_dir = '/var/www/meteo'
     database = '/var/lib/meteo/data.db'
     (pressure, light) = read_tables(database)
     write_output(destination_dir, 'pressure', pressure)
