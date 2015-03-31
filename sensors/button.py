@@ -37,13 +37,21 @@ def main():
     if arguments.verbose:
         logging.basicConfig(level=logging.INFO)
     
-    logging.info("Waiting for shutdown event on pin %d" % arguments.shutdown_pin)
+    logging.info("Waiting for shutdown event on pin %d"
+                 % arguments.shutdown_pin)
 
     try:
         logging.info('Initializing GPIO')
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(arguments.shutdown_pin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-        GPIO.add_event_detect(arguments.shutdown_pin, GPIO.RISING, callback=shutdown_callback, bouncetime=3000)
+        GPIO.setup(
+            arguments.shutdown_pin,
+            GPIO.IN,
+            pull_up_down=GPIO.PUD_UP)
+        GPIO.add_event_detect(
+            arguments.shutdown_pin,
+            GPIO.RISING,
+            callback=shutdown_callback,
+            bouncetime=3000)
         main_loop()
     finally:
         logging.info('Cleaning up GPIO')
