@@ -2,6 +2,7 @@
 
 import RPi.GPIO as GPIO
 from time import sleep
+from signal import signal, SIGTERM
 import logging
 import argparse
 
@@ -54,12 +55,19 @@ def initialize_gpio(arguments):
         bouncetime=3000)
 
 
+def signal_handler(signal, stack_frame):
+    logging.info("Received signal %d" % signal)
+    global keep
+    keep = False
+
+
 def main(arguments):
     if arguments.verbose:
         logging.basicConfig(level=logging.INFO)
 
     try:
         initialize_gpio(arguments)
+        signal(SIGTERM, signal_handler)
         main_loop()
     finally:
         logging.info('Cleaning up GPIO')
