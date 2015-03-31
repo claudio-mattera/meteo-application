@@ -5,13 +5,16 @@ from time import sleep
 from signal import signal, SIGTERM
 import logging
 import argparse
+from os import system
 
 
 keep = True
+SHUTDOWN_TIMEOUT_MINUTES = 1
 
 
 def shutdown_callback(pin):
     logging.info("Callback called on pin %d" % pin)
+    system("shutdown +%d -h" % SHUTDOWN_TIMEOUT_MINUTES)
     global keep
     keep = False
 
