@@ -5,18 +5,22 @@ from time import sleep
 import logging
 import argparse
 
+
 keep = True
+
 
 def shutdown_callback(pin):
     logging.info("Callback called on pin %d" % pin)
     global keep
     keep = False
 
+
 def main_loop():
     logging.info('Entering main loop')
     global keep
     while keep:
         sleep(1)
+
 
 def parse_command_line():
     parser = argparse.ArgumentParser(
@@ -32,26 +36,30 @@ def parse_command_line():
         help='The pin corresponding to shutdown button')
     return parser.parse_args()
 
-def main():
-    arguments = parse_command_line()
-    if arguments.verbose:
-        logging.basicConfig(level=logging.INFO)
+
+def initialize_gpio(arguments):
+    logging.info('Initializing GPIO')
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(
+        arguments.shutdown_pin,
+        GPIO.IN,
+        pull_up_down=GPIO.PUD_UP)
     
     logging.info("Waiting for shutdown event on pin %d"
                  % arguments.shutdown_pin)
+    GPIO.add_event_detect(
+        arguments.shutdown_pin,
+        GPIO.RISING,
+        callback=shutdown_callback,
+        bouncetime=3000)
+
+
+def main(arguments):
+    if arguments.verbose:
+        logging.basicConfig(level=logging.INFO)
 
     try:
-        logging.info('Initializing GPIO')
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(
-            arguments.shutdown_pin,
-            GPIO.IN,
-            pull_up_down=GPIO.PUD_UP)
-        GPIO.add_event_detect(
-            arguments.shutdown_pin,
-            GPIO.RISING,
-            callback=shutdown_callback,
-            bouncetime=3000)
+        initialize_gpio(arguments)
         main_loop()
     finally:
         logging.info('Cleaning up GPIO')
@@ -59,5 +67,5 @@ def main():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
-    main()
+    arguments = parse_command_line()
+    main(arguments)
