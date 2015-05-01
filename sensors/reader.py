@@ -2,6 +2,7 @@
 
 from Adafruit_BMP085 import BMP085
 from BH1750 import BH1750
+from HTU21D import HTU21D
 
 class PressureReader(object):
 
@@ -43,7 +44,7 @@ class PressureReader(object):
 class HumidityReader(object):
 
     def __init__(self):
-        pass
+        self.htu = HTU21D()
 
     def name(self):
         return 'humidity'
@@ -52,8 +53,8 @@ class HumidityReader(object):
         return ['Temperature', 'Humidity']
 
     def readValues(self):
-        temperature = None
-        humidity = None
+        temperature = self.htu.read_temperature()
+        humidity = self.htu.read_humidity()
 
         return {
             'Temperature': temperature,
