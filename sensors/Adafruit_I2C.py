@@ -50,7 +50,7 @@ class Adafruit_I2C(object):
   def errMsg(self):
     logger = logging.getLogger(__name__)
     logger.error("Error accessing 0x%02X: Check your I2C address" % self.address)
-    return -1
+    raise Exception("Error accessing 0x%02X: Check your I2C address" % self.address)
 
   def write8(self, reg, value):
     "Writes an 8-bit value to the specified register/address"

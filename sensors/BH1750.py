@@ -50,6 +50,8 @@ class BH1750 :
 
     def readRawLight(self):
         data = self.i2c.readList(self.mode, 2)
+        if data == -1:
+            return -1
         return ((data[0] << 8) + data[1])
 
     def readLight(self):

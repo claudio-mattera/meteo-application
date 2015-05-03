@@ -24,7 +24,11 @@ class SingletonMonitor(object):
 
         readings = {}
         for reader in self.readers:
-            values = reader.readValues()
+            try:
+                values = reader.readValues()
+            except Exception as ex:
+                print("Error querying %s reader: %s" % (reader.name(), ex))
+                continue
             name = reader.name()
             values = dict((name + key, value) for (key, value) in values.items())
             readings.update(values)
@@ -63,17 +67,17 @@ class DatabaseMonitor(SingletonMonitor):
                      lightInfrared, lightVisible, lightUltraviolet) \
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (dateTime,
-                    reading['internalTemperature'],
-                    reading['pressureTemperature'],
-                    reading['pressurePressure'],
-                    reading['pressureAltitude'],
-                    reading['humidityTemperature'],
-                    reading['humidityHumidity'],
-                    reading['windSpeed'],
-                    reading['windDirection'],
-                    reading['lightInfrared'],
-                    reading['lightVisible'],
-                    reading['lightUltraviolet']
+                    reading.get('internalTemperature'),
+                    reading.get('pressureTemperature'),
+                    reading.get('pressurePressure'),
+                    reading.get('pressureAltitude'),
+                    reading.get('humidityTemperature'),
+                    reading.get('humidityHumidity'),
+                    reading.get('windSpeed'),
+                    reading.get('windDirection'),
+                    reading.get('lightInfrared'),
+                    reading.get('lightVisible'),
+                    reading.get('lightUltraviolet')
                     ));
 
     def ensureTableExists(self):
