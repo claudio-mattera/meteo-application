@@ -15,11 +15,13 @@ class Application:
         humidityReader = HumidityReader()
         windReader = WindReader()
         lightReader = LightReader()
+        presenceReader = PresenceReader(args.known_wifi_devices)
         monitor.attachReader(internalReader)
         monitor.attachReader(pressureReader)
         monitor.attachReader(humidityReader)
         monitor.attachReader(windReader)
         monitor.attachReader(lightReader)
+        monitor.attachReader(presenceReader)
         monitor.run()
 
     def parseCommandLine(self):
@@ -32,6 +34,7 @@ class Application:
         parser.add_argument('storage', help='storage backend', type=str, choices=['db', 'file', 'dummy'])
         parser.add_argument('--database', help='database path', type=str, default='meteodata.db')
         parser.add_argument('--filename', help='output file path', type=str, default='meteodata.txt')
+        parser.add_argument('--known-wifi-devices', help='known wi-fi devices filename', type=str, default='known_devices.txt')
 
         return parser.parse_args()
 

@@ -64,8 +64,9 @@ class DatabaseMonitor(SingletonMonitor):
                      pressureTemperature, pressurePressure, pressureAltitude, \
                      humidityTemperature, humidityHumidity, \
                      windSpeed, windDirection, \
-                     lightInfrared, lightVisible, lightUltraviolet) \
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                     lightInfrared, lightVisible, lightUltraviolet, \
+                     presenceCount) \
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (dateTime,
                     reading.get('internalTemperature'),
                     reading.get('pressureTemperature'),
@@ -77,7 +78,8 @@ class DatabaseMonitor(SingletonMonitor):
                     reading.get('windDirection'),
                     reading.get('lightInfrared'),
                     reading.get('lightVisible'),
-                    reading.get('lightUltraviolet')
+                    reading.get('lightUltraviolet'),
+                    reading.get('presenceCount')
                     ));
 
     def ensureTableExists(self):
@@ -98,7 +100,8 @@ class DatabaseMonitor(SingletonMonitor):
                     windDirection        REAL,
                     lightInfrared        REAL,
                     lightVisible         REAL,
-                    lightUltraviolet     REAL
+                    lightUltraviolet     REAL,
+                    presenceCount        INTEGER
                     );''')
 
 
@@ -126,7 +129,8 @@ class FileMonitor(SingletonMonitor):
                 'pressureTemperature', 'pressurePressure', 'pressureAltitude',
                 'humidityTemperature', 'humidityHumidity',
                 'windSpeed', 'windDirection',
-                'lightInfrared', 'lightVisible', 'lightUltraviolet']
+                'lightInfrared', 'lightVisible', 'lightUltraviolet',
+                'presenceCount']
 
     def fileHeading(self):
         return "date," + ','.join(self.fields()) + "\n"

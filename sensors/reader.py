@@ -3,6 +3,7 @@
 from Adafruit_BMP085 import BMP085
 from BH1750 import BH1750
 from HTU21D import HTU21D
+from Wifi import Wifi
 
 class PressureReader(object):
 
@@ -132,4 +133,21 @@ class InternalReader(object):
 
         return {
             'Temperature': temperature
+        }
+
+class PresenceReader(object):
+
+    def __init__(self, known_devices):
+        self.wifi = Wifi(known_devices)
+
+    def name(self):
+        return 'presence'
+
+    def fields(self):
+        return ['Count']
+
+    def readValues(self):
+        presence_count = self.wifi.readPresenceCount()
+        return {
+            'Count': presence_count
         }
