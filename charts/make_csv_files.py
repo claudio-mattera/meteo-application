@@ -34,11 +34,20 @@ def read_light_table(db):
     return read_table(db, fields, field_names)
 
 
+def read_presence_table(db):
+    fields = ['datetime(dateTime, "localtime")',
+              'presenceCount']
+    field_names = ['date',
+                   'count']
+    return read_table(db, fields, field_names)
+
+
 def read_tables(database):
     with sqlite3.connect(database) as db:
         pressure = read_pressure_table(db)
         light = read_light_table(db)
-        return (pressure, light)
+        presence = read_presence_table(db)
+        return (pressure, light, presence)
 
 
 def write_output(destination_dir, name, data):
@@ -50,9 +59,10 @@ def write_output(destination_dir, name, data):
 def main():
     destination_dir = '/var/www/meteo'
     database = '/var/lib/meteo/data.db'
-    (pressure, light) = read_tables(database)
+    (pressure, light, presence) = read_tables(database)
     write_output(destination_dir, 'pressure', pressure)
     write_output(destination_dir, 'light', light)
+    write_output(destination_dir, 'presence', presence)
 
 
 if __name__ == '__main__':
