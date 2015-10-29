@@ -22,7 +22,7 @@ class Wifi:
         outcome = subprocess.check_output(cmd)
         string = outcome.decode('utf-8')
         matches = self.pattern.findall(string)
-        return [mac for (ip, mac) in matches]
+        return [mac.lower() for (ip, mac) in matches]
 
     def readActiveDevices(self):
         active_nics = self.readActiveNics()
