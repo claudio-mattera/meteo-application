@@ -38,7 +38,7 @@ class Application:
                     info, obj, sensors_information[info]['sensors'])
             except ImportError as e:
                 logging.critical("Can't continue for %s: %s" % (class_name, e))
-            except FileNotFoundError as e:
+            except IOError as e:
                 logging.critical("Can't continue for %s: %s" % (class_name, e))
         monitor.run()
 
