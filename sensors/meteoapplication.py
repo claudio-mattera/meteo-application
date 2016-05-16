@@ -2,19 +2,21 @@
 
 import logging
 import yaml
+import os
 from monitor import (
     SingletonMonitor, DatabaseMonitor, ContinuousMonitorProxy)
 
 
-def load_class(module_name, class_name):
+def load_class(directory, module_name, class_name):
     import imp
-    foo = imp.load_source(module_name, module_name + ".py")
+    foo = imp.load_source(module_name, directory + "/" + module_name + ".py")
     return getattr(foo, class_name)
 
 
 class Application:
 
     def run(self):
+        directory = os.path.dirname(__file__)
         args = self.parse_command_line()
         self.setup_logging(args)
         sensors_information = self.retrieve_sensors_information(args.sensors)
@@ -26,7 +28,7 @@ class Application:
                 logging.debug(
                     "Instantiating class %s.%s"
                     % (module_name, class_name))
-                clazz = load_class(module_name, class_name)
+                clazz = load_class(directory, module_name, class_name)
                 ctor_args = sensors_information[info].get('ctor_args', [])
                 logging.debug(
                     "Instantiating object %s.%s(%s)"
