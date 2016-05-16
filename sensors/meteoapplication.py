@@ -32,7 +32,7 @@ class Application:
                 ctor_args = sensors_information[info].get('ctor_args', [])
                 logging.debug(
                     "Instantiating object %s.%s(%s)"
-                    % (module_name, class_name, ', '.join(ctor_args)))
+                    % (module_name, class_name, ', '.join([str(a) for a in ctor_args])))
                 obj = clazz(*ctor_args)
                 monitor.attach_reader(
                     info, obj, sensors_information[info]['sensors'])
