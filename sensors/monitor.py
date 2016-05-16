@@ -7,6 +7,7 @@ from os.path import isfile
 import sqlite3
 import logging
 
+
 class SingletonMonitor(object):
     """
     Monitors a list of sensor readers once.
@@ -16,27 +17,33 @@ class SingletonMonitor(object):
     def __init__(self):
         self.readers = []
 
-    def attachReader(self, reader):
-        self.readers.append(reader)
+    def attach_reader(self, name, obj, sensors):
+        self.readers.append((name, obj, sensors))
 
     def run(self):
-        dateTime = datetime.utcnow()
+        date_time = datetime.utcnow()
 
         readings = {}
-        for reader in self.readers:
-            try:
-                values = reader.readValues()
-            except Exception as ex:
-                print("Error querying %s reader: %s" % (reader.name(), ex))
-                continue
-            name = reader.name()
-            values = dict((name + key, value) for (key, value) in values.items())
-            readings.update(values)
+        for name, obj, sensors in self.readers:
+            for sensor in sensors:
+                try:
+                    name = sensor['name']
+                    args = sensor.get('args', [])
+                    method_name = 'read_' + sensor['field']
+                    logging.debug(
+                        "Calling %s(%s)"
+                        % (method_name, ', '.join(args)))
+                    method = getattr(obj, method_name)
+                    value = method(*args)
+                    logging.debug("Result: %r" % value)
+                    readings[name] = value
+                except Exception as ex:
+                    logging.critical("Error querying %s: %s" % (name, ex))
 
-        self.storeReading(dateTime, readings)
+        self.store_reading(date_time, readings)
 
-    def storeReading(self, dateTime, readings):
-        print("Date: %s" % dateTime)
+    def store_reading(self, date_time, readings):
+        print("Date: %s" % date_time)
         for name, value in readings.items():
             print("%s: %r" % (name, value))
 
@@ -47,16 +54,16 @@ class DatabaseMonitor(SingletonMonitor):
     Store the results to a SQLite database.
     """
 
-    def __init__(self, databasePath):
+    def __init__(self, database_path):
         super(DatabaseMonitor, self).__init__()
-        self.databasePath = databasePath
-        self.ensureTableExists()
+        self.database_path = database_path
+        self.ensure_table_exists()
 
-    def storeReading(self, dateTime, reading):
+    def store_reading(self, date_time, reading):
         logger = logging.getLogger(__name__)
         logger.debug('Storing reading to database')
 
-        with sqlite3.connect(self.databasePath) as connection:
+        with sqlite3.connect(self.database_path) as connection:
             connection.execute(
                 "INSERT INTO MeteoData \
                     (dateTime, \
@@ -67,26 +74,26 @@ class DatabaseMonitor(SingletonMonitor):
                      lightInfrared, lightVisible, lightUltraviolet, \
                      presenceCount) \
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    (dateTime,
-                    reading.get('internalTemperature'),
-                    reading.get('pressureTemperature'),
-                    reading.get('pressurePressure'),
-                    reading.get('pressureAltitude'),
-                    reading.get('humidityTemperature'),
-                    reading.get('humidityHumidity'),
-                    reading.get('windSpeed'),
-                    reading.get('windDirection'),
-                    reading.get('lightInfrared'),
-                    reading.get('lightVisible'),
-                    reading.get('lightUltraviolet'),
-                    reading.get('presenceCount')
-                    ));
+                (date_time,
+                 reading.get('internalTemperature'),
+                 reading.get('pressureTemperature'),
+                 reading.get('pressurePressure'),
+                 reading.get('pressureAltitude'),
+                 reading.get('humidityTemperature'),
+                 reading.get('humidityHumidity'),
+                 reading.get('windSpeed'),
+                 reading.get('windDirection'),
+                 reading.get('lightInfrared'),
+                 reading.get('lightVisible'),
+                 reading.get('lightUltraviolet'),
+                 reading.get('presenceCount')
+                 ))
 
-    def ensureTableExists(self):
+    def ensure_table_exists(self):
         logger = logging.getLogger(__name__)
         logger.debug('Ensuring table MeteoData exists')
 
-        with sqlite3.connect(self.databasePath) as connection:
+        with sqlite3.connect(self.database_path) as connection:
             connection.execute(
                 '''CREATE TABLE IF NOT EXISTS MeteoData
                    (dateTime             TEXT  PRIMARY KEY  NOT NULL,
@@ -111,18 +118,18 @@ class FileMonitor(SingletonMonitor):
     Writes the results to a file.
     """
 
-    def __init__(self, fileName):
+    def __init__(self, file_name):
         super(FileMonitor, self).__init__()
-        self.fileName = fileName
+        self.file_name = file_name
 
-        if not isfile(self.fileName):
-            with open(self.fileName, 'w') as file:
-                file.write(self.fileHeading())
+        if not isfile(self.file_name):
+            with open(self.file_name, 'w') as file:
+                file.write(self.file_heading())
 
-    def storeReading(self, dateTime, reading):
-        readingString = self.formatReadingForFile(dateTime, reading)
-        with open(self.fileName, 'a') as file:
-            file.write(readingString)
+    def store_reading(self, date_time, reading):
+        reading_string = self.format_reading_for_file(date_time, reading)
+        with open(self.file_name, 'a') as file:
+            file.write(reading_string)
 
     def fields(self):
         return ['internalTemperature',
@@ -132,14 +139,17 @@ class FileMonitor(SingletonMonitor):
                 'lightInfrared', 'lightVisible', 'lightUltraviolet',
                 'presenceCount']
 
-    def fileHeading(self):
+    def file_heading(self):
         return "date," + ','.join(self.fields()) + "\n"
 
-    def formatReadingForFile(self, dateTime, reading):
-        dateString = dateTime.isoformat()
-        f = lambda value: ("%.2f" % value) if value else ''
-        valuesString = ','.join(f(reading[field]) for field in self.fields())
-        return dateString + ',' + valuesString + '\n'
+    def format_reading_for_file(self, date_time, reading):
+        date_string = date_time.isoformat()
+
+        def f(value):
+            return ("%.2f" % value) if value else ''
+
+        calues_string = ','.join(f(reading[field]) for field in self.fields())
+        return date_string + ',' + calues_string + '\n'
 
 
 class ContinuousMonitorProxy(object):
@@ -153,11 +163,11 @@ class ContinuousMonitorProxy(object):
         self.interval = 60
         self.isReading = False
 
-    def attachReader(self, reader):
-        self.monitor.attachReader(reader)
+    def attach_reader(self, name, obj, sensors):
+        self.monitor.attach_reader(name, obj, sensors)
 
     def run(self):
-        self.startMonitoring()
+        self.start_monitoring()
 
         try:
             while True:
@@ -166,34 +176,34 @@ class ContinuousMonitorProxy(object):
             logger = logging.getLogger(__name__)
             logger.info('Continuous monitor interrupted')
 
-            self.stopMonitoring()
+            self.stop_monitoring()
 
-    def setInterval(self, interval):
+    def set_interval(self, interval):
         logger = logging.getLogger(__name__)
         logger.info("Setting interval to %d seconds" % interval)
         self.interval = int(interval)
 
-    def startMonitoring(self):
+    def start_monitoring(self):
         if self.isReading:
             return
 
         logger = logging.getLogger(__name__)
         logger.info('Start reading')
         self.isReading = True
-        self.thread = Thread(target=self.keepMonitoring)
+        self.thread = Thread(target=self.keep_monitoring)
         self.thread.start()
 
-    def stopMonitoring(self):
+    def stop_monitoring(self):
         if not self.isReading:
             return
 
         logger = logging.getLogger(__name__)
-        logger.info("Stop reading (will stop at next iteration, \
-                    within %d seconds)" % self.interval)
+        logger.info("Stop reading (will stop at next iteration, " +
+                    "within %d seconds)" % self.interval)
 
         self.isReading = False
 
-    def keepMonitoring(self):
+    def keep_monitoring(self):
         while self.isReading:
             self.monitor.run()
             sleep(self.interval)
