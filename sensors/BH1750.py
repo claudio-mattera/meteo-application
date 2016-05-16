@@ -48,11 +48,11 @@ class BH1750 :
         else:
             self.mode = mode
 
-    def readRawLight(self):
+    def read_raw_light(self):
         data = self.i2c.readList(self.mode, 2)
         if data == -1:
             return -1
         return ((data[0] << 8) + data[1])
 
-    def readLight(self):
-        return self.readRawLight() / self.__RAW_TO_LUX_COEFFICIENT
+    def read_light(self):
+        return self.read_raw_light() / self.__RAW_TO_LUX_COEFFICIENT
