@@ -3,7 +3,6 @@
 from time import sleep
 from threading import Thread
 from datetime import datetime
-from os.path import isfile
 import sqlite3
 import logging
 
@@ -21,31 +20,29 @@ class SingletonMonitor(object):
         self.readers.append((name, obj, sensors))
 
     def run(self):
+        logger = logging.getLogger(__name__)
         date_time = datetime.utcnow()
 
-        readings = {}
         for name, obj, sensors in self.readers:
             for sensor in sensors:
                 try:
                     name = sensor['name']
+                    datatype = sensor['datatype']
                     args = sensor.get('args', [])
                     method_name = 'read_' + sensor['field']
-                    logging.debug(
+                    logger.debug(
                         "Calling %s(%s)"
                         % (method_name, ', '.join(args)))
                     method = getattr(obj, method_name)
                     value = method(*args)
-                    logging.debug("Result: %r" % value)
-                    readings[name] = value
+                    logger.debug("Result: %r" % value)
+                    self.store_reading(name, datatype, date_time, value)
                 except Exception as ex:
-                    logging.critical("Error querying %s: %s" % (name, ex))
+                    logger.critical("Error querying %s: %s" % (name, ex))
 
-        self.store_reading(date_time, readings)
-
-    def store_reading(self, date_time, readings):
-        print("Date: %s" % date_time)
-        for name, value in readings.items():
-            print("%s: %r" % (name, value))
+    def store_reading(self, name, datatype, date_time, value):
+        logger = logging.getLogger(__name__)
+        logger.info("%s %s = %r :: %s" % (date_time, name, value, datatype))
 
 
 class DatabaseMonitor(SingletonMonitor):
@@ -57,99 +54,32 @@ class DatabaseMonitor(SingletonMonitor):
     def __init__(self, database_path):
         super(DatabaseMonitor, self).__init__()
         self.database_path = database_path
-        self.ensure_table_exists()
 
-    def store_reading(self, date_time, reading):
+    def store_reading(self, name, datatype, date_time, value):
         logger = logging.getLogger(__name__)
-        logger.debug('Storing reading to database')
 
         with sqlite3.connect(self.database_path) as connection:
-            connection.execute(
-                "INSERT INTO MeteoData \
-                    (dateTime, \
-                     internalTemperature, \
-                     pressureTemperature, pressurePressure, pressureAltitude, \
-                     humidityTemperature, humidityHumidity, \
-                     windSpeed, windDirection, \
-                     lightInfrared, lightVisible, lightUltraviolet, \
-                     presenceCount) \
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (date_time,
-                 reading.get('internalTemperature'),
-                 reading.get('pressureTemperature'),
-                 reading.get('pressurePressure'),
-                 reading.get('pressureAltitude'),
-                 reading.get('humidityTemperature'),
-                 reading.get('humidityHumidity'),
-                 reading.get('windSpeed'),
-                 reading.get('windDirection'),
-                 reading.get('lightInfrared'),
-                 reading.get('lightVisible'),
-                 reading.get('lightUltraviolet'),
-                 reading.get('presenceCount')
-                 ))
+            self.ensure_table_exists(name, datatype, connection)
 
-    def ensure_table_exists(self):
+            logger.debug('Storing reading to database')
+            timestamp = int(1000 * date_time.timestamp())
+            connection.execute(
+                "INSERT INTO %s (date_time, value) \
+                 VALUES (?, ?)" % name,
+                (timestamp, value))
+
+    def ensure_table_exists(self, name, datatype, connection):
         logger = logging.getLogger(__name__)
-        logger.debug('Ensuring table MeteoData exists')
+        logger.debug('Ensuring table %s exists' % name)
 
-        with sqlite3.connect(self.database_path) as connection:
-            connection.execute(
-                '''CREATE TABLE IF NOT EXISTS MeteoData
-                   (dateTime             TEXT  PRIMARY KEY  NOT NULL,
-                    internalTemperature  REAL,
-                    pressureTemperature  REAL,
-                    pressurePressure     REAL,
-                    pressureAltitude     REAL,
-                    humidityTemperature  REAL,
-                    humidityHumidity     REAL,
-                    windSpeed            REAL,
-                    windDirection        REAL,
-                    lightInfrared        REAL,
-                    lightVisible         REAL,
-                    lightUltraviolet     REAL,
-                    presenceCount        INTEGER
-                    );''')
+        if datatype not in ['INTEGER', 'REAL']:
+            raise ValueError("Invalid type: %s" % datatype)
 
-
-class FileMonitor(SingletonMonitor):
-    """
-    Monitors a list of sensor readers once.
-    Writes the results to a file.
-    """
-
-    def __init__(self, file_name):
-        super(FileMonitor, self).__init__()
-        self.file_name = file_name
-
-        if not isfile(self.file_name):
-            with open(self.file_name, 'w') as file:
-                file.write(self.file_heading())
-
-    def store_reading(self, date_time, reading):
-        reading_string = self.format_reading_for_file(date_time, reading)
-        with open(self.file_name, 'a') as file:
-            file.write(reading_string)
-
-    def fields(self):
-        return ['internalTemperature',
-                'pressureTemperature', 'pressurePressure', 'pressureAltitude',
-                'humidityTemperature', 'humidityHumidity',
-                'windSpeed', 'windDirection',
-                'lightInfrared', 'lightVisible', 'lightUltraviolet',
-                'presenceCount']
-
-    def file_heading(self):
-        return "date," + ','.join(self.fields()) + "\n"
-
-    def format_reading_for_file(self, date_time, reading):
-        date_string = date_time.isoformat()
-
-        def f(value):
-            return ("%.2f" % value) if value else ''
-
-        calues_string = ','.join(f(reading[field]) for field in self.fields())
-        return date_string + ',' + calues_string + '\n'
+        connection.execute(
+            '''CREATE TABLE IF NOT EXISTS %s
+               (date_time INTEGER  PRIMARY KEY  NOT NULL,
+                value    %s
+                );''' % (name, datatype))
 
 
 class ContinuousMonitorProxy(object):

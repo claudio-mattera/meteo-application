@@ -3,7 +3,7 @@
 import logging
 import yaml
 from monitor import (
-    SingletonMonitor, FileMonitor, DatabaseMonitor, ContinuousMonitorProxy)
+    SingletonMonitor, DatabaseMonitor, ContinuousMonitorProxy)
 
 
 def load_class(module_name, class_name):
@@ -60,7 +60,7 @@ class Application:
         parser.add_argument(
             'storage',
             help='storage backend',
-            type=str, choices=['db', 'file', 'dummy'])
+            type=str, choices=['db', 'dummy'])
         parser.add_argument(
             '--database',
             help='database path',
@@ -96,8 +96,6 @@ class Application:
     def create_basic_monitor(self, args):
         if args.storage == 'dummy':
             return SingletonMonitor()
-        elif args.storage == 'file':
-            return FileMonitor(args.filename)
         elif args.storage == 'db':
             return DatabaseMonitor(args.database)
         else:
