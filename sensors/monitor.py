@@ -62,11 +62,10 @@ class DatabaseMonitor(SingletonMonitor):
             self.ensure_table_exists(name, datatype, connection)
 
             logger.debug('Storing reading to database')
-            timestamp = int(1000 * date_time.timestamp())
             connection.execute(
                 "INSERT INTO %s (date_time, value) \
                  VALUES (?, ?)" % name,
-                (timestamp, value))
+                (date_time.strftime("%Y-%m-%d %H:%M:%S"), value))
 
     def ensure_table_exists(self, name, datatype, connection):
         logger = logging.getLogger(__name__)
@@ -77,9 +76,9 @@ class DatabaseMonitor(SingletonMonitor):
 
         connection.execute(
             '''CREATE TABLE IF NOT EXISTS %s
-               (date_time INTEGER  PRIMARY KEY  NOT NULL,
-                value    %s
-                );''' % (name, datatype))
+               (date_time TEXT  PRIMARY KEY  NOT NULL,
+                value     %s
+               );''' % (name, datatype))
 
 
 class ContinuousMonitorProxy(object):
