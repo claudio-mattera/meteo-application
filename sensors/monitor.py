@@ -21,7 +21,6 @@ class SingletonMonitor(object):
 
     def run(self):
         logger = logging.getLogger(__name__)
-        date_time = datetime.utcnow()
 
         for name, obj, sensors in self.readers:
             for sensor in sensors:
@@ -36,6 +35,7 @@ class SingletonMonitor(object):
                     method = getattr(obj, method_name)
                     value = method(*args)
                     logger.debug("Result: %r" % value)
+                    date_time = datetime.utcnow()
                     self.store_reading(name, datatype, date_time, value)
                 except Exception as ex:
                     logger.critical("Error querying %s: %s" % (name, ex))
