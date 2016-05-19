@@ -55,6 +55,9 @@ class DatabaseMonitor(SingletonMonitor):
         super(DatabaseMonitor, self).__init__()
         self.database_path = database_path
 
+        with sqlite3.connect(self.database_path) as connection:
+            self.ensure_master_table_exists(connection)
+
     def store_reading(self, name, datatype, date_time, value):
         logger = logging.getLogger(__name__)
 
@@ -79,6 +82,21 @@ class DatabaseMonitor(SingletonMonitor):
                (date_time TEXT  PRIMARY KEY  NOT NULL,
                 value     %s
                );''' % (name, datatype))
+
+        connection.execute(
+            '''INSERT OR IGNORE INTO master (name, datatype) \
+               VALUES (?, ?)''', (name, datatype))
+
+    def ensure_master_table_exists(self, connection):
+        logger = logging.getLogger(__name__)
+        logger.debug('Ensuring master table exists')
+
+        connection.execute(
+            '''CREATE TABLE IF NOT EXISTS master
+               (name     TEXT  PRIMARY KEY  NOT NULL,
+                datatype TEXT               NOT NULL,
+                UNIQUE(name)
+               );''')
 
 
 class ContinuousMonitorProxy(object):
