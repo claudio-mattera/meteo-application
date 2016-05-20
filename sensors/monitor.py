@@ -64,7 +64,7 @@ class DatabaseMonitor(SingletonMonitor):
         with sqlite3.connect(self.database_path) as connection:
             for sensor in sensors:
                 name = sensor['name']
-                kind = sensor['type']
+                kind = sensor['kind']
                 unit = sensor['unit']
                 datatype = sensor['datatype']
 
