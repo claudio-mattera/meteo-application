@@ -58,19 +58,30 @@ class DatabaseMonitor(SingletonMonitor):
         with sqlite3.connect(self.database_path) as connection:
             self.ensure_master_table_exists(connection)
 
+    def attach_reader(self, name, obj, sensors):
+        super(DatabaseMonitor, self).attach_reader(name, obj, sensors)
+
+        with sqlite3.connect(self.database_path) as connection:
+            for sensor in sensors:
+                name = sensor['name']
+                kind = sensor['type']
+                unit = sensor['unit']
+                datatype = sensor['datatype']
+
+                self.ensure_table_exists(
+                    name, kind, unit, datatype, connection)
+
     def store_reading(self, name, datatype, date_time, value):
         logger = logging.getLogger(__name__)
 
         with sqlite3.connect(self.database_path) as connection:
-            self.ensure_table_exists(name, datatype, connection)
-
             logger.debug('Storing reading to database')
             connection.execute(
                 "INSERT INTO %s (date_time, value) \
                  VALUES (?, ?)" % name,
                 (date_time.strftime("%Y-%m-%d %H:%M:%S"), value))
 
-    def ensure_table_exists(self, name, datatype, connection):
+    def ensure_table_exists(self, name, kind, unit, datatype, connection):
         logger = logging.getLogger(__name__)
         logger.debug('Ensuring table %s exists' % name)
 
@@ -84,8 +95,8 @@ class DatabaseMonitor(SingletonMonitor):
                );''' % (name, datatype))
 
         connection.execute(
-            '''INSERT OR IGNORE INTO master (name, datatype) \
-               VALUES (?, ?)''', (name, datatype))
+            '''INSERT OR IGNORE INTO master (name, kind, unit, datatype) \
+               VALUES (?, ?, ?, ?)''', (name, kind, unit, datatype))
 
     def ensure_master_table_exists(self, connection):
         logger = logging.getLogger(__name__)
@@ -94,6 +105,8 @@ class DatabaseMonitor(SingletonMonitor):
         connection.execute(
             '''CREATE TABLE IF NOT EXISTS master
                (name     TEXT  PRIMARY KEY  NOT NULL,
+                kind     TEXT               NOT NULL,
+                unit     TEXT               NOT NULL,
                 datatype TEXT               NOT NULL,
                 UNIQUE(name)
                );''')
