@@ -29,6 +29,12 @@
         </form>
 
         <script type="text/javascript">
+Array.prototype.difference = function(a) {
+    return this.filter(function(i) {return a.indexOf(i) < 0;});
+};
+
+var chart;
+
 function getSelectedValues(select) {
     var result = [];
 
@@ -42,10 +48,10 @@ function getSelectedValues(select) {
 }
 
 function fetch_available_streams() {
-    uri = "./get_available_streams"
+    var uri = "./get_available_streams"
     console.log("URI: " + uri)
     $.getJSON(uri, function(data) {
-        streams = data["streams"];
+        var streams = data["streams"];
 
         for (let stream of streams) {
             console.log(stream);
@@ -60,15 +66,15 @@ function fetch_available_streams() {
 }
 
 function plot() {
-    start = document.getElementById("start").value;
-    end = document.getElementById("end").value;
-    meters = getSelectedValues(document.getElementById("streams"));
+    var start = document.getElementById("start").value;
+    var end = document.getElementById("end").value;
+    var meters = getSelectedValues(document.getElementById("streams"));
 
-    uri = "./get_stream?start=" + start + "&end=" + end + "&meters=" + meters
+    var uri = "./get_stream?start=" + start + "&end=" + end + "&meters=" + meters
     console.log("URI: " + uri)
     $.getJSON(uri, function(data) {
 
-        kindToIndex = {
+        var kindToIndex = {
             'temperature': 0,
             'pressure': 1,
             'humidity': 2,
@@ -77,160 +83,191 @@ function plot() {
             'altitude': 5,
         }
 
-        series = [];
+        var series = [];
 
         data = data["data"];
 
+        var existing_series_refs = {}
+        var existing_series = [];
+        for (let series of chart.series) {
+            existing_series.push(series.name);
+            existing_series_refs[series.name] = series;
+        }
+        var series_to_display = [];
         for (var key in data) {
-            if (data.hasOwnProperty(key) && !data[key]["metadata"]["hide"]) {
-                console.log(data[key]["metadata"]["name"]);
-                series.push({
-                    type: 'spline',
-                    data: data[key]["readings"],
-                    name: key,
-                    yAxis: kindToIndex[data[key]["metadata"]["kind"]]
-                });
-            }
+            name = data[key]["metadata"]["name"];
+            series_to_display.push(name);
+        }
+        var series_to_add = series_to_display.difference(existing_series);
+        var series_to_remove = existing_series.difference(series_to_display);
+
+        console.log("To add: " + series_to_add);
+        console.log("To remove: " + series_to_remove);
+
+        for (let key of series_to_add) {
+            console.log(key);
+            var kind = data[key]["metadata"]["kind"];
+            chart.addSeries({
+                type: 'spline',
+                data: data[key]["readings"],
+                name: key,
+                yAxis: kindToIndex[kind]
+            }, false);
         }
 
-        temperature_axis = {
-            labels: {
-                format: '{value}°C',
-                style: {
-                    color: Highcharts.getOptions().colors[0]
-                }
-            },
-            title: {
-                text: 'Temperature',
-                style: {
-                    color: Highcharts.getOptions().colors[0]
-                }
-            },
-            opposite: false
+        for (let key of series_to_remove) {
+            existing_series_refs[key].remove();
         }
-        pressure_axis = {
-            labels: {
-                format: '{value} Pa',
-                style: {
-                    color: Highcharts.getOptions().colors[1]
-                }
-            },
-            title: {
-                text: 'Pressure',
-                style: {
-                    color: Highcharts.getOptions().colors[1]
-                }
-            },
-            opposite: true
-        }
-        humidity_axis = {
-            labels: {
-                format: '{value} %',
-                style: {
-                    color: Highcharts.getOptions().colors[1]
-                }
-            },
-            title: {
-                text: 'Humidity',
-                style: {
-                    color: Highcharts.getOptions().colors[1]
-                }
-            },
-            opposite: true
-        }
-        light_axis = {
-            labels: {
-                format: '{value} Lx',
-                style: {
-                    color: Highcharts.getOptions().colors[3]
-                }
-            },
-            title: {
-                text: 'Light',
-                style: {
-                    color: Highcharts.getOptions().colors[3]
-                }
-            },
-            opposite: true
-        }
-        presence_axis = {
-            labels: {
-                format: '{value}',
-                style: {
-                    color: Highcharts.getOptions().colors[4]
-                }
-            },
-            title: {
-                text: 'Presence',
-                style: {
-                    color: Highcharts.getOptions().colors[4]
-                }
-            },
-            opposite: true
-        }
-        altitude_axis = {
-            labels: {
-                format: '{value} m',
-                style: {
-                    color: Highcharts.getOptions().colors[4]
-                }
-            },
-            title: {
-                text: 'Altitude',
-                style: {
-                    color: Highcharts.getOptions().colors[4]
-                }
-            },
-            opposite: true
-        }
-        yAxis = [
-            temperature_axis,
-            pressure_axis,
-            humidity_axis,
-            light_axis,
-            presence_axis,
-            altitude_axis
-        ]
 
-        $('#chart').highcharts({
-            chart: {
-                zoomType: 'x'
-            },
-            rangeSelector : {
-                selected : 1
-            },
+        chart.redraw();
 
-            title : {
-                text : 'Weather data'
-            },
-            xAxis: {
-                type: 'datetime'
-            },
-            yAxis: yAxis,
-            plotOptions: {
-                spline: {
-                    marker: {
-                        radius: 0
-                    }
-                }
-            },
-            legend: {
-                layout: 'vertical',
-                align: 'left',
-                x: 80,
-                verticalAlign: 'top',
-                y: 55,
-                floating: true,
-                backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
-            },
-            series : series
-        });
     }).fail(function() {
         console.log("Error loading JSON");
     });
 }
 
-document.onload = fetch_available_streams();
+function initialize_chart() {
+
+    var temperature_axis = {
+        labels: {
+            format: '{value}°C',
+            style: {
+                color: Highcharts.getOptions().colors[0]
+            }
+        },
+        title: {
+            text: 'Temperature',
+            style: {
+                color: Highcharts.getOptions().colors[0]
+            }
+        },
+        opposite: false
+    }
+    var pressure_axis = {
+        labels: {
+            format: '{value} Pa',
+            style: {
+                color: Highcharts.getOptions().colors[1]
+            }
+        },
+        title: {
+            text: 'Pressure',
+            style: {
+                color: Highcharts.getOptions().colors[1]
+            }
+        },
+        opposite: true
+    }
+    var humidity_axis = {
+        labels: {
+            format: '{value} %',
+            style: {
+                color: Highcharts.getOptions().colors[1]
+            }
+        },
+        title: {
+            text: 'Humidity',
+            style: {
+                color: Highcharts.getOptions().colors[1]
+            }
+        },
+        opposite: true
+    }
+    var light_axis = {
+        labels: {
+            format: '{value} Lx',
+            style: {
+                color: Highcharts.getOptions().colors[3]
+            }
+        },
+        title: {
+            text: 'Light',
+            style: {
+                color: Highcharts.getOptions().colors[3]
+            }
+        },
+        opposite: true
+    }
+    var presence_axis = {
+        labels: {
+            format: '{value}',
+            style: {
+                color: Highcharts.getOptions().colors[4]
+            }
+        },
+        title: {
+            text: 'Presence',
+            style: {
+                color: Highcharts.getOptions().colors[4]
+            }
+        },
+        opposite: true
+    }
+    var altitude_axis = {
+        labels: {
+            format: '{value} m',
+            style: {
+                color: Highcharts.getOptions().colors[4]
+            }
+        },
+        title: {
+            text: 'Altitude',
+            style: {
+                color: Highcharts.getOptions().colors[4]
+            }
+        },
+        opposite: true
+    }
+    var yAxis = [
+        temperature_axis,
+        pressure_axis,
+        humidity_axis,
+        light_axis,
+        presence_axis,
+        altitude_axis
+    ]
+
+    chart = new Highcharts.Chart({
+        chart: {
+            renderTo: 'chart',
+            zoomType: 'x'
+        },
+        rangeSelector : {
+            selected : 1
+        },
+
+        title : {
+            text : 'Weather data'
+        },
+        xAxis: {
+            type: 'datetime'
+        },
+        yAxis: yAxis,
+        plotOptions: {
+            spline: {
+                marker: {
+                    radius: 0
+                }
+            }
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'left',
+            x: 80,
+            verticalAlign: 'top',
+            y: 55,
+            floating: true,
+            backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
+        },
+    });
+}
+
+function initialize() {
+    fetch_available_streams();
+    initialize_chart();
+}
+
+document.onload = initialize()
         </script>
     </body>
 </html>
