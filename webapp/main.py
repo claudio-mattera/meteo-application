@@ -7,9 +7,17 @@ import pandas as pd
 from resample import resample
 
 
-DATABASE_PATH = './meteodata.db'
+def parse_bool(string):
+    return string.lower() in ['true', 't', 'yes', 'y']
 
-ONE_MINUTE = '1T'
+
+bottle.default_app().config.load_config('config.ini')
+
+RESAMPLING = parse_bool(bottle.default_app().config['charts.resampling'])
+RESAMPLING_FREQUENCY = bottle.default_app().config[
+    'charts.resampling_frequency']
+DATABASE_PATH = bottle.default_app().config['sqlite.db']
+ROOT = bottle.default_app().config['server.root']
 
 
 def parse_date(string):
@@ -34,8 +42,9 @@ def get_meter_metadata(connection, meter):
     }
 
 
-@bottle.get('/get_available_streams')
+@bottle.get(ROOT + 'get_available_streams')
 def get_available_streams():
+
     with sqlite3.connect(DATABASE_PATH) as connection:
         connection.row_factory = sqlite3.Row
         query = "SELECT name, kind FROM master"
@@ -48,7 +57,7 @@ def get_available_streams():
     }
 
 
-@bottle.get('/get_stream')
+@bottle.get(ROOT + 'get_stream')
 def get_stream():
     meters = bottle.request.GET.get("meters").split(',')
     start = parse_date(bottle.request.GET.get("start"))
@@ -73,13 +82,16 @@ def get_stream():
 
         series = pd.Series(values, index=pd.to_datetime(datetimes))
 
-        resampled = resample(
-            series,
-            start.replace(second=00),
-            end,
-            ONE_MINUTE,
-            'nan'
-        ).dropna()
+        if RESAMPLING:
+            resampled = resample(
+                series,
+                start.replace(second=00),
+                end,
+                RESAMPLING_FREQUENCY,
+                'nan'
+            ).dropna()
+        else:
+            resampled = series
 
         readings = [write_reading(i, resampled[i]) for i in resampled.index]
 
@@ -102,6 +114,6 @@ def get_stream():
     return output
 
 
-@bottle.get('/')
+@bottle.get(ROOT)
 def index():
     return bottle.static_file('index.html', root='.', mimetype='text/html')
