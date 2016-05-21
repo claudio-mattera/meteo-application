@@ -13,10 +13,6 @@
 
         <form action="javascript:plot();">
             <div>
-                <label for="meters">Meters:</label>
-                <input type="text" id="meters" value="temperature_board,temperature_BMP085,temperature_ds_28_000005a1ea21,pressure_BMP085,humidity_HTU21D,light_BH1750,presence_wifi">
-            </div>
-            <div>
                 <label for="start">Start:</label>
                 <input type="datetime" id="start" value="2016-05-20 19:50:00">
             </div>
@@ -25,17 +21,49 @@
                 <input type="datetime" id="end" value="2016-05-20 23:00:00">
             </div>
             <div>
+                <label for="streams">Streams:</label>
+                <select id="streams" multiple size="10"></select>
+            </div>
+            <div>
             <button type="submit">Plot</button>
             </div>
         </form>
 
         <script type="text/javascript">
+function getSelectedValues(select) {
+    var result = [];
+
+    for (let option of select.options) {
+        if (option.selected) {
+            result.push(option.value);
+        }
+    }
+
+    return result;
+}
+
+function fetch_available_streams() {
+    uri = "./get_available_streams"
+    console.log("URI: " + uri)
+    $.getJSON(uri, function(data) {
+        streams = data["streams"];
+
+        for (let stream of streams) {
+            console.log(stream);
+
+            var select = document.getElementById('streams');
+            var option = document.createElement('option');
+            option.value = stream['name'];
+            option.innerHTML = stream['name'] + " (" + stream['kind'] + ")";
+            select.appendChild(option);
+        }
+    });
+}
+
 function plot() {
     start = document.getElementById("start").value;
     end = document.getElementById("end").value;
-    meters = document.getElementById("meters").value;
-
-
+    meters = getSelectedValues(document.getElementById("streams"));
 
     uri = "./get_stream?start=" + start + "&end=" + end + "&meters=" + meters
     console.log("URI: " + uri)
@@ -203,7 +231,7 @@ function plot() {
     });
 }
 
-document.onload = plot();
+document.onload = fetch_available_streams();
         </script>
     </body>
 </html>
