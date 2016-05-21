@@ -67,14 +67,6 @@ class Application:
             '--database',
             help='database path',
             type=str, default='meteodata.db')
-        parser.add_argument(
-            '--filename',
-            help='output file path',
-            type=str, default='meteodata.txt')
-        parser.add_argument(
-            '--known-wifi-devices',
-            help='known wi-fi devices filename',
-            type=str, default='known_devices.txt')
 
         return parser.parse_args()
 
