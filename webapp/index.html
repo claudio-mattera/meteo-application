@@ -13,11 +13,11 @@
         <form action="javascript:plot();">
             <div>
                 <label for="start">Start:</label>
-                <input type="datetime" id="start" value="2016-05-20 19:50:00">
+                <input type="datetime" id="start">
             </div>
             <div>
                 <label for="end">End:</label>
-                <input type="datetime" id="end" value="2016-05-20 23:00:00">
+                <input type="datetime" id="end">
             </div>
             <div>
                 <label for="streams">Streams:</label>
@@ -32,6 +32,16 @@
 Array.prototype.difference = function(a) {
     return this.filter(function(i) {return a.indexOf(i) < 0;});
 };
+
+Date.prototype.toCustomString = function() {
+    var day = ("0" + this.getDate()).slice(-2);
+    var month = ("0" + (this.getMonth() + 1)).slice(-2);
+    var year = this.getFullYear();
+    var hours = ("0" + this.getHours()).slice(-2);
+    var minutes = ("0" + this.getMinutes()).slice(-2);
+    var seconds = ("0" + this.getSeconds()).slice(-2);
+    return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
+}
 
 var chart;
 
@@ -270,6 +280,11 @@ function initialize_chart() {
 function initialize() {
     fetch_available_streams();
     initialize_chart();
+
+    var today = new Date();
+    var yesterday = new Date(today.getTime() - 1000 * 60 * 60 * 24 * 1);
+    document.getElementById('start').value = yesterday.toCustomString();
+    document.getElementById('end').value = today.toCustomString();
 }
 
 document.onload = initialize()
