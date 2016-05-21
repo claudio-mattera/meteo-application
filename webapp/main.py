@@ -2,9 +2,6 @@ import bottle
 
 import sqlite3
 import datetime
-import pandas as pd
-
-from resample import resample
 
 
 def parse_bool(string):
@@ -20,14 +17,35 @@ DATABASE_PATH = bottle.default_app().config['sqlite.db']
 ROOT = bottle.default_app().config['server.root']
 
 
+def resample(readings, start, end, frequency):
+    import pandas as pd
+    from resample import resample
+
+    def write_reading(i, v):
+        timestamp = int(i.timestamp() * 1000)
+        value = v.item()
+        return [timestamp, value]
+
+    if len(readings) > 0:
+        datetimes, values = zip(*readings)
+    else:
+        datetimes, values = [], []
+
+    series = pd.Series(values, index=pd.to_datetime(datetimes))
+
+    resampled = resample(
+        series,
+        start.replace(second=00),
+        end,
+        frequency,
+        'nan'
+    ).dropna()
+
+    return [write_reading(i, resampled[i]) for i in resampled.index]
+
+
 def parse_date(string):
     return datetime.datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
-
-
-def write_reading(i, v):
-    timestamp = int(i.timestamp() * 1000)
-    value = v.item()
-    return [timestamp, value]
 
 
 def get_meter_metadata(connection, meter):
@@ -75,25 +93,8 @@ def get_stream():
         cursor = connection.execute(query, (start_string, end_string))
         readings = [[row['date_time'], row['value']] for row in cursor]
 
-        if len(readings) > 0:
-            datetimes, values = zip(*readings)
-        else:
-            datetimes, values = [], []
-
-        series = pd.Series(values, index=pd.to_datetime(datetimes))
-
         if RESAMPLING:
-            resampled = resample(
-                series,
-                start.replace(second=00),
-                end,
-                RESAMPLING_FREQUENCY,
-                'nan'
-            ).dropna()
-        else:
-            resampled = series
-
-        readings = [write_reading(i, resampled[i]) for i in resampled.index]
+            readings = resample(readings, start, end, RESAMPLING_FREQUENCY)
 
         metadata = get_meter_metadata(connection, meter)
 
