@@ -12,6 +12,10 @@
 
         <form action="javascript:plot();">
             <div>
+                <label for="streams">Streams:</label>
+                <select id="streams" multiple size="10" onchange="plot();"></select>
+            </div>
+            <div>
                 <label for="start">Start:</label>
                 <input type="datetime" id="start">
             </div>
@@ -20,12 +24,6 @@
                 <input type="datetime" id="end">
             </div>
             <div>
-                <label for="streams">Streams:</label>
-                <select id="streams" multiple size="10"></select>
-            </div>
-            <div>
-            <button type="submit">Plot</button>
-            </div>
         </form>
 
         <script type="text/javascript">
