@@ -260,11 +260,11 @@ class BMP085 :
 
         return float(p)
 
-    def read_altitude(self, seaLevelPressure=101325):
+    def read_altitude(self, sea_level_pressure=101325):
         "Calculates the altitude in meters"
         altitude = 0.0
-        pressure = float(self.readPressure())
-        altitude = 44330.0 * (1.0 - pow(pressure / seaLevelPressure, 0.1903))
+        pressure = float(self.read_pressure())
+        altitude = 44330.0 * (1.0 - pow(pressure / sea_level_pressure, 0.1903))
         if self.debug:
             logger = logging.getLogger(__name__)
             logger.debug("DBG: Altitude = %d" % (altitude))
