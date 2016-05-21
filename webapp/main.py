@@ -37,6 +37,23 @@ def get_meter_metadata(connection, meter):
 @hug.cli()
 @hug.get(output=hug.output_format.json)
 @hug.local()
+def get_available_streams(hug_timer=3):
+    with sqlite3.connect(DATABASE_PATH) as connection:
+        connection.row_factory = sqlite3.Row
+        query = "SELECT name, kind FROM master"
+        cursor = connection.execute(query)
+        streams = [
+            {'name': row['name'], 'kind': row['kind']} for row in cursor]
+
+    return {
+        'streams': streams,
+        'elapsed_time': float(hug_timer)
+    }
+
+
+@hug.cli()
+@hug.get(output=hug.output_format.json)
+@hug.local()
 def get_stream(
         meters: hug.types.multiple,
         start: date_time_type,
