@@ -87,8 +87,8 @@ def get_stream(
             start.replace(second=00),
             end,
             ONE_MINUTE,
-            'constant'
-        )
+            'nan'
+        ).dropna()
 
         readings = [write_reading(i, resampled[i]) for i in resampled.index]
 
