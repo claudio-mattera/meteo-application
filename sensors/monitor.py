@@ -22,6 +22,8 @@ class SingletonMonitor(object):
     def run(self):
         logger = logging.getLogger(__name__)
 
+        readings = []
+
         for name, obj, sensors in self.readers:
             for sensor in sensors:
                 try:
@@ -36,11 +38,16 @@ class SingletonMonitor(object):
                     value = method(*args)
                     logger.debug("Result: %r" % value)
                     date_time = datetime.utcnow()
-                    self.store_reading(name, datatype, date_time, value)
+                    readings.append((name, datatype, date_time, value))
                 except Exception as ex:
                     logger.critical("Error querying %s: %s" % (name, ex))
+        self.store_readings(readings)
 
-    def store_reading(self, name, datatype, date_time, value):
+    def store_readings(self, readings):
+        for name, datatype, date_time, value in readings:
+            self._store_reading(name, datatype, date_time, value)
+
+    def _store_reading(self, name, datatype, date_time, value):
         logger = logging.getLogger(__name__)
         logger.info("%s %s = %r :: %s" % (date_time, name, value, datatype))
 
@@ -71,15 +78,19 @@ class DatabaseMonitor(SingletonMonitor):
                 self.ensure_table_exists(
                     name, kind, unit, datatype, connection)
 
-    def store_reading(self, name, datatype, date_time, value):
+    def store_readings(self, readings):
         logger = logging.getLogger(__name__)
-
         with sqlite3.connect(self.database_path) as connection:
-            logger.debug('Storing reading to database')
-            connection.execute(
-                "INSERT INTO %s (date_time, value) \
-                 VALUES (?, ?)" % name,
-                (date_time.strftime("%Y-%m-%d %H:%M:%S"), value))
+            logger.debug('Storing %d readings to database' % len(readings))
+            for name, datatype, date_time, value in readings:
+                self._store_reading(
+                    name, datatype, date_time, value, connection)
+
+    def _store_reading(self, name, datatype, date_time, value, connection):
+        connection.execute(
+            "INSERT INTO %s (date_time, value) \
+             VALUES (?, ?)" % name,
+            (date_time.strftime("%Y-%m-%d %H:%M:%S"), value))
 
     def ensure_table_exists(self, name, kind, unit, datatype, connection):
         logger = logging.getLogger(__name__)
