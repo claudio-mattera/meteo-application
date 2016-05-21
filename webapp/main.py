@@ -1,4 +1,4 @@
-import hug
+import bottle
 
 import sqlite3
 import datetime
@@ -14,10 +14,6 @@ ONE_MINUTE = '1T'
 
 def parse_date(string):
     return datetime.datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
-
-
-date_time_type = hug.types.accept(
-    parse_date, 'A date time', 'Invalid date time provided')
 
 
 def write_reading(i, v):
@@ -38,10 +34,8 @@ def get_meter_metadata(connection, meter):
     }
 
 
-@hug.cli()
-@hug.get(output=hug.output_format.json)
-@hug.local()
-def get_available_streams(hug_timer=3):
+@bottle.get('/get_available_streams')
+def get_available_streams():
     with sqlite3.connect(DATABASE_PATH) as connection:
         connection.row_factory = sqlite3.Row
         query = "SELECT name, kind FROM master"
@@ -50,19 +44,16 @@ def get_available_streams(hug_timer=3):
             {'name': row['name'], 'kind': row['kind']} for row in cursor]
 
     return {
-        'streams': streams,
-        'elapsed_time': float(hug_timer)
+        'streams': streams
     }
 
 
-@hug.cli()
-@hug.get(output=hug.output_format.json)
-@hug.local()
-def get_stream(
-        meters: hug.types.multiple,
-        start: date_time_type,
-        end: date_time_type,
-        hug_timer=3):
+@bottle.get('/get_stream')
+def get_stream():
+    meters = bottle.request.GET.get("meters").split(',')
+    start = parse_date(bottle.request.GET.get("start"))
+    end = parse_date(bottle.request.GET.get("end"))
+
     start_string = start.strftime("%Y-%m-%d %H:%M:%S")
     end_string = end.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -105,13 +96,12 @@ def get_stream(
             (meter, fetch_meter(meter, connection)) for meter in meters)
 
     output = {
-        'data': data,
-        'elapsed_time': float(hug_timer)
+        'data': data
     }
 
     return output
 
 
-@hug.get('/', output=hug.output_format.file)
+@bottle.get('/')
 def index():
-    return 'index.html'
+    return bottle.static_file('index.html', root='.', mimetype='text/html')
