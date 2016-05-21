@@ -16,6 +16,12 @@ date_time_type = hug.types.accept(
     parse_date, 'A date time', 'Invalid date time provided')
 
 
+def write_reading(i, v):
+    timestamp = int(i.timestamp() * 1000)
+    value = v.item()
+    return [timestamp, value]
+
+
 def get_meter_metadata(connection, meter):
     query = "SELECT kind, unit, datatype FROM master WHERE name=?"
     cursor = connection.execute(query, (meter,))
@@ -55,7 +61,7 @@ def get_stream(
 
         series = pd.Series(values, index=pd.to_datetime(datetimes))
 
-        readings = [[i.timestamp() * 1000, series[i]] for i in series.index]
+        readings = [write_reading(i, series[i]) for i in series.index]
 
         metadata = get_meter_metadata(connection, meter)
 
