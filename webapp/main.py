@@ -4,8 +4,12 @@ import sqlite3
 import datetime
 import pandas as pd
 
+from resample import resample
+
 
 DATABASE_PATH = './meteodata.db'
+
+ONE_MINUTE = '1T'
 
 
 def parse_date(string):
@@ -59,8 +63,8 @@ def get_stream(
         start: date_time_type,
         end: date_time_type,
         hug_timer=3):
-    start = start.strftime("%Y-%m-%d %H:%M:%S")
-    end = end.strftime("%Y-%m-%d %H:%M:%S")
+    start_string = start.strftime("%Y-%m-%d %H:%M:%S")
+    end_string = end.strftime("%Y-%m-%d %H:%M:%S")
 
     def fetch_meter(meter, connection):
         query = (
@@ -68,7 +72,7 @@ def get_stream(
             "WHERE strftime('%s', date_time) " +
             "BETWEEN strftime('%s', ?) AND strftime('%s', ?)"
         )
-        cursor = connection.execute(query, (start, end))
+        cursor = connection.execute(query, (start_string, end_string))
         readings = [[row['date_time'], row['value']] for row in cursor]
 
         if len(readings) > 0:
@@ -78,7 +82,15 @@ def get_stream(
 
         series = pd.Series(values, index=pd.to_datetime(datetimes))
 
-        readings = [write_reading(i, series[i]) for i in series.index]
+        resampled = resample(
+            series,
+            start.replace(second=00),
+            end,
+            ONE_MINUTE,
+            'constant'
+        )
+
+        readings = [write_reading(i, resampled[i]) for i in resampled.index]
 
         metadata = get_meter_metadata(connection, meter)
 
