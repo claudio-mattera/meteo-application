@@ -86,13 +86,3 @@ def get_stream(
 @hug.get('/', output=hug.output_format.file)
 def index():
     return 'index.html'
-
-
-@hug.get('/metricsgraphics.css', output=hug.output_format.file)
-def metricsgraphics_css():
-    return 'metricsgraphics.css'
-
-
-@hug.get('/metricsgraphics.min.js', output=hug.output_format.file)
-def metricsgraphics_min_js():
-    return 'metricsgraphics.min.js'
