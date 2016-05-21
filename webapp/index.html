@@ -127,6 +127,11 @@ function plot() {
 }
 
 function initialize_chart() {
+    Highcharts.setOptions({
+        global: {
+            useUTC: false
+        }
+    });
 
     var temperature_axis = {
         labels: {
