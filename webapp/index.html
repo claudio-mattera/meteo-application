@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Chart</title>
+        <meta charset="utf-8">
+            <link href='./metricsgraphics.css' rel='stylesheet' type='text/css'>
+            <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js'></script>
+            <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.0/d3.min.js' charset='utf-8'></script>
+            <script src='./metricsgraphics.min.js'></script>
+        </head>
+    <body>
+        <div id="chart"></div>
+
+        <form action="javascript:plot();">
+            <div>
+                <label for="meters">Meters:</label>
+                <input type="text" id="meters" value="temperature_board,temperature_BMP085">
+            </div>
+            <div>
+                <label for="start">Start:</label>
+                <input type="datetime" id="start" value="2016-05-20 19:50:00">
+            </div>
+            <div>
+                <label for="end">End:</label>
+                <input type="datetime" id="end" value="2016-05-20 23:00:00">
+            </div>
+            <div>
+            <button type="submit">Plot</button>
+            </div>
+        </form>
+
+        <script type="text/javascript">
+function parsePair(pair) {
+    return {"date": new Date(pair[0]), "value": pair[1]};
+}
+
+function plot() {
+    start = document.getElementById("start").value;
+    end = document.getElementById("end").value;
+    meters = document.getElementById("meters").value;
+
+    uri = "./get_stream?start=" + start + "&end=" + end + "&meters=" + meters
+    console.log("URI: " + uri)
+    d3.json(uri, function(data) {
+
+        results = [];
+        labels = [];
+        kinds = [];
+        units = [];
+
+        data = data["data"];
+
+        for (var key in data) {
+            if (data.hasOwnProperty(key) && !data[key]["metadata"]["hide"]) {
+                console.log(data[key]["metadata"]["name"]);
+                results.push(data[key]["readings"].map(parsePair));
+                labels.push(data[key]["metadata"]["name"]);
+                kinds.push(data[key]["metadata"]["kind"]);
+                units.push(data[key]["metadata"]["unit"]);
+            }
+        }
+
+        MG.data_graphic({
+            title: "Chart",
+            description: "Weather data",
+            data: results,
+            min_y_from_data: true,
+            european_clock: true,
+            utc_time: false, // Display local time
+            show_secondary_x_label: true,
+            full_width: true,
+            height: 600,
+            right: 200,
+            left: 100,
+            target: '#chart',
+            x_accessor: 'date',
+            y_accessor: 'value',
+            aggregate_rollover: true,
+            legend: labels,
+            x_label: 'Date/time',
+            y_label: kinds[0] + " [" + units[0] + "]"
+        });
+    });
+}
+
+document.onload = plot();
+        </script>
+    </body>
+</html>
