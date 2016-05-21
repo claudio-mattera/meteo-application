@@ -2,6 +2,7 @@ import bottle
 
 import sqlite3
 import datetime
+import calendar
 
 
 def parse_bool(string):
@@ -22,9 +23,9 @@ def resample(readings, start, end, frequency):
     from resample import resample
 
     def write_reading(i, v):
-        timestamp = int(i.timestamp() * 1000)
+        d = i.to_pydatetime()
         value = v.item()
-        return [timestamp, value]
+        return [d, value]
 
     if len(readings) > 0:
         datetimes, values = zip(*readings)
@@ -91,10 +92,14 @@ def get_stream():
             "BETWEEN strftime('%s', ?) AND strftime('%s', ?)"
         )
         cursor = connection.execute(query, (start_string, end_string))
-        readings = [[row['date_time'], row['value']] for row in cursor]
+        readings = [
+            [parse_date(row['date_time']), row['value']] for row in cursor]
 
         if RESAMPLING:
             readings = resample(readings, start, end, RESAMPLING_FREQUENCY)
+
+        readings = [
+            [calendar.timegm(d.timetuple()) * 1000, v] for d, v in readings]
 
         metadata = get_meter_metadata(connection, meter)
 
