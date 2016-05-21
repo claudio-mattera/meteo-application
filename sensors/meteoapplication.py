@@ -3,12 +3,12 @@
 import logging
 import yaml
 import os
+import imp
 from monitor import (
     SingletonMonitor, DatabaseMonitor, ContinuousMonitorProxy)
 
 
 def load_class(directory, module_name, class_name):
-    import imp
     foo = imp.load_source(module_name, directory + "/" + module_name + ".py")
     return getattr(foo, class_name)
 
