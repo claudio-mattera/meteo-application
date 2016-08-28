@@ -46,7 +46,9 @@ var chart;
 function getSelectedValues(select) {
     var result = [];
 
-    for (let option of select.options) {
+    for (var i = 0; i < select.options.length; ++i) {
+        var option = select.options[i];
+    // for (let option of select.options) {
         if (option.selected) {
             result.push(option.value);
         }
@@ -61,7 +63,9 @@ function fetch_available_streams() {
     $.getJSON(uri, function(data) {
         var streams = data["streams"];
 
-        for (let stream of streams) {
+        for (var i = 0; i < streams.length; ++i) {
+            var stream = streams[i];
+        // for (let stream of streams) {
             console.log(stream);
 
             var select = document.getElementById('streams');
@@ -97,7 +101,9 @@ function plot() {
 
         var existing_series_refs = {}
         var existing_series = [];
-        for (let series of chart.series) {
+        for (var i = 0; i < chart.series.length; ++i) {
+            var series = chart.series[i];
+        // for (let series of chart.series) {
             existing_series.push(series.name);
             existing_series_refs[series.name] = series;
         }
@@ -112,7 +118,9 @@ function plot() {
         console.log("To add: " + series_to_add);
         console.log("To remove: " + series_to_remove);
 
-        for (let key of series_to_add) {
+        for (var i = 0; i < series_to_add.length; ++i) {
+            var key = series_to_add[i];
+        // for (let key of series_to_add) {
             console.log(key);
             var kind = data[key]["metadata"]["kind"];
             chart.addSeries({
@@ -123,7 +131,9 @@ function plot() {
             }, false);
         }
 
-        for (let key of series_to_remove) {
+        for (var i = 0; i < series_to_remove.length; ++i) {
+            var key = series_to_remove[i];
+        // for (let key of series_to_remove) {
             existing_series_refs[key].remove();
         }
 
