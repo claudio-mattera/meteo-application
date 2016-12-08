@@ -35,7 +35,12 @@ class SingletonMonitor(object):
                         "Calling %s(%s)"
                         % (method_name, ', '.join(args)))
                     method = getattr(obj, method_name)
-                    value = method(*args)
+
+                    # Take the median of few attempts
+                    n_attempts = 5
+                    values = [method(*args) for _ in range(n_attempts)]
+                    value = values[n_attempts // 2 + 1]
+
                     logger.debug("Result: %r" % value)
                     date_time = datetime.utcnow()
                     readings.append((name, datatype, date_time, value))
