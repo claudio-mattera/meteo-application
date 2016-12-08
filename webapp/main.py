@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import bottle
 
 import sqlite3
@@ -18,6 +20,8 @@ RESAMPLING_FREQUENCY = bottle.default_app().config[
     'charts.resampling_frequency']
 DATABASE_PATH = bottle.default_app().config['sqlite.db']
 ROOT = bottle.default_app().config['server.root']
+PORT = int(bottle.default_app().config['server.port'])
+BIND_ADDRESS = bottle.default_app().config['server.bind_address']
 
 
 def resample(readings, start, end, frequency):
@@ -125,3 +129,7 @@ def get_stream():
 @bottle.get(ROOT)
 def index():
     return bottle.static_file(os.path.join(dir_path, 'index.html'), root='.', mimetype='text/html')
+
+
+if __name__ == '__main__':
+    bottle.run(server='wsgiref', port=PORT, host=BIND_ADDRESS)
