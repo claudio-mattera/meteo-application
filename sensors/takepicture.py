@@ -34,7 +34,7 @@ CONFIGURATIONS = {
 def estimate_light():
     from BH1750 import BH1750
     sensor = BH1750()
-    light_level = sensor.readLight()
+    light_level = sensor.read_light()
     return light_level
 
 
