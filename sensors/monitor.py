@@ -16,15 +16,15 @@ class SingletonMonitor(object):
     def __init__(self):
         self.readers = []
 
-    def attach_reader(self, name, obj, sensors):
-        self.readers.append((name, obj, sensors))
+    def attach_reader(self, name, obj, sensors, use_median):
+        self.readers.append((name, obj, sensors, use_median))
 
     def run(self):
         logger = logging.getLogger(__name__)
 
         readings = []
 
-        for name, obj, sensors in self.readers:
+        for name, obj, sensors, use_median in self.readers:
             for sensor in sensors:
                 try:
                     name = sensor['name']
@@ -36,10 +36,13 @@ class SingletonMonitor(object):
                         % (method_name, ', '.join(args)))
                     method = getattr(obj, method_name)
 
-                    # Take the median of few attempts
-                    n_attempts = 5
-                    values = [method(*args) for _ in range(n_attempts)]
-                    value = values[n_attempts // 2 + 1]
+                    if use_median:
+                        # Take the median of few attempts
+                        n_attempts = 5
+                        values = [method(*args) for _ in range(n_attempts)]
+                        value = values[n_attempts // 2 + 1]
+                    else:
+                        value = method(*args)
 
                     logger.debug("Result: %r" % value)
                     date_time = datetime.utcnow()

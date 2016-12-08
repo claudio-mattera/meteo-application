@@ -35,7 +35,11 @@ class Application:
                     % (module_name, class_name, ', '.join([str(a) for a in ctor_args])))
                 obj = clazz(*ctor_args)
                 monitor.attach_reader(
-                    info, obj, sensors_information[info]['sensors'])
+                    info,
+                    obj,
+                    sensors_information[info]['sensors'],
+                    sensors_information[info]['use_median'],
+                )
             except ImportError as e:
                 logging.critical("Can't continue for %s: %s" % (class_name, e))
             except IOError as e:
