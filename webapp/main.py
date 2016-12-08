@@ -3,13 +3,15 @@ import bottle
 import sqlite3
 import datetime
 import calendar
+import os
 
 
 def parse_bool(string):
     return string.lower() in ['true', 't', 'yes', 'y']
 
 
-bottle.default_app().config.load_config('config.ini')
+dir_path = os.path.dirname(os.path.realpath(__file__))
+bottle.default_app().config.load_config(os.path.join(dir_path, 'config.ini'))
 
 RESAMPLING = parse_bool(bottle.default_app().config['charts.resampling'])
 RESAMPLING_FREQUENCY = bottle.default_app().config[
@@ -122,4 +124,4 @@ def get_stream():
 
 @bottle.get(ROOT)
 def index():
-    return bottle.static_file('index.html', root='.', mimetype='text/html')
+    return bottle.static_file(os.path.join(dir_path, 'index.html'), root='.', mimetype='text/html')
