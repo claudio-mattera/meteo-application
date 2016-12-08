@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import time
 from Adafruit_I2C import Adafruit_I2C
@@ -56,3 +56,9 @@ class BH1750 :
 
     def read_light(self):
         return self.read_raw_light() / self.__RAW_TO_LUX_COEFFICIENT
+
+
+if __name__ == '__main__':
+    sensor = BH1750(debug=True)
+    light = sensor.read_light()
+    print("Light: {0}".format(light))
