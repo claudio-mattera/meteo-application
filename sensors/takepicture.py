@@ -121,13 +121,25 @@ def take_picture(arguments: typing.Any) -> None:
 
 
 class StorePairAction(argparse.Action):
-    def __init__(self, option_strings: typing.List[typing.Text], dest: typing.Text, nargs: typing.Text=None, **kwargs: typing.Any) -> None:
+    def __init__(
+            self,
+            option_strings: typing.List[typing.Text],
+            dest: typing.Text,
+            nargs: typing.Text=None,
+            **kwargs: typing.Any
+            ) -> None:
         if nargs is not None:
             raise ValueError("nargs not allowed")
         super(StorePairAction, self).__init__(option_strings, dest, **kwargs)
         self.dest = dest
 
-    def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace, values: typing.Any, option_string: typing.Optional[typing.Text]=None) -> None:
+    def __call__(
+            self,
+            parser: argparse.ArgumentParser,
+            namespace: argparse.Namespace,
+            values: typing.Any,
+            option_string: typing.Optional[typing.Text]=None
+            ) -> None:
         parsed_values = parse_resolution(values)
         setattr(namespace, self.dest, parsed_values)
 

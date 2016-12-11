@@ -17,7 +17,13 @@ class MonitorInterface:
     def run(self) -> None:
         raise RuntimeError('Unimplemented')
 
-    def attach_reader(self, name: typing.Text, obj: typing.Any, sensors: typing.List[Sensor], use_median: bool) -> None:
+    def attach_reader(
+            self,
+            name: typing.Text,
+            obj: typing.Any,
+            sensors: typing.List[Sensor],
+            use_median: bool
+            ) -> None:
         raise RuntimeError('Unimplemented')
 
     def store_readings(self, readings: typing.List[Reading]) -> None:
@@ -34,7 +40,13 @@ class SingletonMonitor(MonitorInterface):
         super(SingletonMonitor, self).__init__()
         self.readers = []  # type: typing.List[Reader]
 
-    def attach_reader(self, name: typing.Text, obj: typing.Any, sensors: typing.List[Sensor], use_median: bool) -> None:
+    def attach_reader(
+            self,
+            name: typing.Text,
+            obj: typing.Any,
+            sensors: typing.List[Sensor],
+            use_median: bool
+            ) -> None:
         self.readers.append((name, obj, sensors, use_median))
 
     def run(self) -> None:
@@ -73,7 +85,13 @@ class SingletonMonitor(MonitorInterface):
         for name, datatype, date_time, value in readings:
             self._store_reading(name, datatype, date_time, value)
 
-    def _store_reading(self, name: typing.Text, datatype: typing.Text, date_time: datetime, value: float) -> None:
+    def _store_reading(
+            self,
+            name: typing.Text,
+            datatype: typing.Text,
+            date_time: datetime,
+            value: float
+            ) -> None:
         logger = logging.getLogger(__name__)
         logger.info("%s %s = %r :: %s" % (date_time, name, value, datatype))
 
@@ -91,7 +109,13 @@ class DatabaseMonitor(SingletonMonitor):
         with sqlite3.connect(self.database_path) as connection:
             self.ensure_master_table_exists(connection)
 
-    def attach_reader(self, name: typing.Text, obj: typing.Any, sensors: typing.List[Sensor], use_median: bool) -> None:
+    def attach_reader(
+            self,
+            name: typing.Text,
+            obj: typing.Any,
+            sensors: typing.List[Sensor],
+            use_median: bool
+            ) -> None:
         super(DatabaseMonitor, self).attach_reader(name, obj, sensors, use_median)
 
         with sqlite3.connect(self.database_path) as connection:
@@ -112,13 +136,27 @@ class DatabaseMonitor(SingletonMonitor):
                 self._store_reading_db(
                     name, datatype, date_time, value, connection)
 
-    def _store_reading_db(self, name: typing.Text, datatype: typing.Text, date_time: datetime, value: float, connection: typing.Any) -> None:
+    def _store_reading_db(
+            self,
+            name: typing.Text,
+            datatype: typing.Text,
+            date_time: datetime,
+            value: float,
+            connection: typing.Any
+            ) -> None:
         connection.execute(
             "INSERT INTO %s (date_time, value) \
              VALUES (?, ?)" % name,
             (date_time.strftime("%Y-%m-%d %H:%M:%S"), value))
 
-    def ensure_table_exists(self, name: typing.Text, kind: typing.Text, unit: typing.Text, datatype: typing.Text, connection: typing.Any) -> None:
+    def ensure_table_exists(
+            self,
+            name: typing.Text,
+            kind: typing.Text,
+            unit: typing.Text,
+            datatype: typing.Text,
+            connection: typing.Any
+            ) -> None:
         logger = logging.getLogger(__name__)
         logger.debug('Ensuring table %s exists' % name)
 
@@ -162,7 +200,13 @@ class ContinuousMonitorProxy(MonitorInterface):
         self.interval = 60
         self.isReading = False
 
-    def attach_reader(self, name: typing.Text, obj: typing.Any, sensors: typing.List[Sensor], use_median: bool) -> None:
+    def attach_reader(
+            self,
+            name: typing.Text,
+            obj: typing.Any,
+            sensors: typing.List[Sensor],
+            use_median: bool
+            ) -> None:
         self.monitor.attach_reader(name, obj, sensors, use_median)
 
     def run(self) -> None:

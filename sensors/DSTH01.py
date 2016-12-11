@@ -26,11 +26,9 @@ class DSTH01:
 
     __POLL_INTERVAL = 0.01
 
-
     def __init__(self, address: int=I2CADDR, debug: bool=False) -> None:
         self.address = address
         self.debug = debug
-
 
     def readData(self, bit: int, fast: bool=False) -> int:
         "Read data from sensor"
@@ -55,12 +53,10 @@ class DSTH01:
         low = self.readRegister(DSTH01.__LOW_DATA_REGISTER)
         return (high << 3) + (low >> 5)
 
-
     def readTemperature(self) -> float:
         "Read temperature from sensor"
         temperature = self.readData(DSTH01.__TEMPERATURE_BIT)
         return temperature / 32 - 50
-
 
     def readHumidity(self) -> float:
         "Read relative humidity from sensor"
@@ -81,10 +77,8 @@ class DSTH01_i2c(DSTH01):
         from Adafruit_I2C import Adafruit_I2C
         self.i2c = Adafruit_I2C(address)
 
-
     def readRegister(self, register: int) -> int:
         return self.i2c.readU8(register)
-
 
     def writeRegister(self, register: int, value: int) -> None:
         self.i2c.write8(register, value)
@@ -98,14 +92,11 @@ class DSTH01_smbus(DSTH01):
         import smbus
         self.bus = smbus.SMBus(1)
 
-
     def readRegister(self, register: int) -> int:
         return self.bus.read_byte_data(self.address, register)
 
-
     def writeRegister(self, register: int, value: int) -> None:
         self.bus.write_byte_data(self.address, register, value)
-
 
 
 if __name__ == '__main__':

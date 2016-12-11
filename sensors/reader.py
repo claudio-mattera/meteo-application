@@ -7,12 +7,13 @@ from BH1750 import BH1750
 from HTU21D import HTU21D
 from Wifi import Wifi
 
+
 class PressureReader(object):
 
     ULTRALOWPOWER_MODE = 0
-    STANDARD_MODE      = 1
-    HIRES_MODE         = 2
-    ULTRAHIRES_MODE    = 3
+    STANDARD_MODE = 1
+    HIRES_MODE = 2
+    ULTRAHIRES_MODE = 3
 
     def __init__(self, mode: int=STANDARD_MODE, address: int=0x77) -> None:
         self.bmp = BMP085(address, mode)
@@ -88,12 +89,12 @@ class WindReader(object):
 
 class LightReader(object):
 
-    CONTINUOUS_HIGH_RES_MODE   = 0x10
+    CONTINUOUS_HIGH_RES_MODE = 0x10
     CONTINUOUS_HIGH_RES_MODE_2 = 0x11
-    CONTINUOUS_LOW_RES_MODE    = 0x13
-    ONE_TIME_HIGH_RES_MODE     = 0x20
-    ONE_TIME_HIGH_RES_MODE_2   = 0x21
-    ONE_TIME_LOW_RES_MODE      = 0x23
+    CONTINUOUS_LOW_RES_MODE = 0x13
+    ONE_TIME_HIGH_RES_MODE = 0x20
+    ONE_TIME_HIGH_RES_MODE_2 = 0x21
+    ONE_TIME_LOW_RES_MODE = 0x23
 
     def __init__(self, mode: int=ONE_TIME_HIGH_RES_MODE_2, address: int=0x23) -> None:
         self.bh1750 = BH1750(address, mode)
@@ -114,6 +115,7 @@ class LightReader(object):
             'Visible': visible,
             'Ultraviolet': ultraviolet
         }
+
 
 class InternalReader(object):
 
@@ -136,6 +138,7 @@ class InternalReader(object):
         return {
             'Temperature': temperature
         }
+
 
 class PresenceReader(object):
 

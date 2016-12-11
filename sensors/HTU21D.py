@@ -36,10 +36,10 @@ class RawI2C(object):
         self.fr.close()
 
 
-class HTU21D :
+class HTU21D:
     i2c = None  # type: RawI2C
 
-    __HTU21D_I2CADDR    = 0x40
+    __HTU21D_I2CADDR = 0x40
 
     __HTU21D_READ_TEMP_HOLD = b"\xE3"
     __HTU21D_READ_HUM_HOLD = b"\xE5"
@@ -47,7 +47,7 @@ class HTU21D :
     __HTU21D_READ_HUM_NOHOLD = b"\xF5"
     __HTU21D_WRITE_USER_REG = b"\xE6"
     __HTU21D_READ_USER_REG = b"\xE7"
-    __HTU21D_SOFT_RESET= b"\xFE"
+    __HTU21D_SOFT_RESET = b"\xFE"
     MEASUREMENT_DELAY = .1
 
     def __init__(self, address: int=__HTU21D_I2CADDR, debug: bool=False) -> None:

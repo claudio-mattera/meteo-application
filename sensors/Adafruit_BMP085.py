@@ -4,36 +4,37 @@ import time
 from Adafruit_I2C import Adafruit_I2C
 import logging
 
+
 # ===========================================================================
 # BMP085 Class
 # ===========================================================================
 
-class BMP085 :
+class BMP085:
     i2c = None  # type: Adafruit_I2C
 
     # Operating Modes
-    __BMP085_ULTRALOWPOWER     = 0
-    __BMP085_STANDARD          = 1
-    __BMP085_HIGHRES           = 2
-    __BMP085_ULTRAHIGHRES      = 3
+    __BMP085_ULTRALOWPOWER = 0
+    __BMP085_STANDARD = 1
+    __BMP085_HIGHRES = 2
+    __BMP085_ULTRAHIGHRES = 3
 
     # BMP085 Registers
-    __BMP085_CAL_AC1           = 0xAA  # R   Calibration data (16 bits)
-    __BMP085_CAL_AC2           = 0xAC  # R   Calibration data (16 bits)
-    __BMP085_CAL_AC3           = 0xAE  # R   Calibration data (16 bits)
-    __BMP085_CAL_AC4           = 0xB0  # R   Calibration data (16 bits)
-    __BMP085_CAL_AC5           = 0xB2  # R   Calibration data (16 bits)
-    __BMP085_CAL_AC6           = 0xB4  # R   Calibration data (16 bits)
-    __BMP085_CAL_B1            = 0xB6  # R   Calibration data (16 bits)
-    __BMP085_CAL_B2            = 0xB8  # R   Calibration data (16 bits)
-    __BMP085_CAL_MB            = 0xBA  # R   Calibration data (16 bits)
-    __BMP085_CAL_MC            = 0xBC  # R   Calibration data (16 bits)
-    __BMP085_CAL_MD            = 0xBE  # R   Calibration data (16 bits)
-    __BMP085_CONTROL           = 0xF4
-    __BMP085_TEMPDATA          = 0xF6
-    __BMP085_PRESSUREDATA      = 0xF6
-    __BMP085_READTEMPCMD       = 0x2E
-    __BMP085_READPRESSURECMD   = 0x34
+    __BMP085_CAL_AC1 = 0xAA  # R   Calibration data (16 bits)
+    __BMP085_CAL_AC2 = 0xAC  # R   Calibration data (16 bits)
+    __BMP085_CAL_AC3 = 0xAE  # R   Calibration data (16 bits)
+    __BMP085_CAL_AC4 = 0xB0  # R   Calibration data (16 bits)
+    __BMP085_CAL_AC5 = 0xB2  # R   Calibration data (16 bits)
+    __BMP085_CAL_AC6 = 0xB4  # R   Calibration data (16 bits)
+    __BMP085_CAL_B1 = 0xB6  # R   Calibration data (16 bits)
+    __BMP085_CAL_B2 = 0xB8  # R   Calibration data (16 bits)
+    __BMP085_CAL_MB = 0xBA  # R   Calibration data (16 bits)
+    __BMP085_CAL_MC = 0xBC  # R   Calibration data (16 bits)
+    __BMP085_CAL_MD = 0xBE  # R   Calibration data (16 bits)
+    __BMP085_CONTROL = 0xF4
+    __BMP085_TEMPDATA = 0xF6
+    __BMP085_PRESSUREDATA = 0xF6
+    __BMP085_READTEMPCMD = 0x2E
+    __BMP085_READPRESSURECMD = 0x34
 
     # Private Fields
     _cal_AC1 = 0
@@ -47,7 +48,6 @@ class BMP085 :
     _cal_MB = 0
     _cal_MC = 0
     _cal_MD = 0
-
 
     def __init__(self, address: int=0x77, mode: int=1, debug: bool=False) -> None:
         self.i2c = Adafruit_I2C(address)
@@ -80,17 +80,17 @@ class BMP085 :
 
     def read_calibration_data(self) -> None:
         "Reads the calibration data from the IC"
-        self._cal_AC1 = self.read_s16(self.__BMP085_CAL_AC1)   # INT16
-        self._cal_AC2 = self.read_s16(self.__BMP085_CAL_AC2)   # INT16
-        self._cal_AC3 = self.read_s16(self.__BMP085_CAL_AC3)   # INT16
-        self._cal_AC4 = self.read_u16(self.__BMP085_CAL_AC4)   # UINT16
-        self._cal_AC5 = self.read_u16(self.__BMP085_CAL_AC5)   # UINT16
-        self._cal_AC6 = self.read_u16(self.__BMP085_CAL_AC6)   # UINT16
-        self._cal_B1 = self.read_s16(self.__BMP085_CAL_B1)     # INT16
-        self._cal_B2 = self.read_s16(self.__BMP085_CAL_B2)     # INT16
-        self._cal_MB = self.read_s16(self.__BMP085_CAL_MB)     # INT16
-        self._cal_MC = self.read_s16(self.__BMP085_CAL_MC)     # INT16
-        self._cal_MD = self.read_s16(self.__BMP085_CAL_MD)     # INT16
+        self._cal_AC1 = self.read_s16(self.__BMP085_CAL_AC1)  # INT16
+        self._cal_AC2 = self.read_s16(self.__BMP085_CAL_AC2)  # INT16
+        self._cal_AC3 = self.read_s16(self.__BMP085_CAL_AC3)  # INT16
+        self._cal_AC4 = self.read_u16(self.__BMP085_CAL_AC4)  # UINT16
+        self._cal_AC5 = self.read_u16(self.__BMP085_CAL_AC5)  # UINT16
+        self._cal_AC6 = self.read_u16(self.__BMP085_CAL_AC6)  # UINT16
+        self._cal_B1 = self.read_s16(self.__BMP085_CAL_B1)  # INT16
+        self._cal_B2 = self.read_s16(self.__BMP085_CAL_B2)  # INT16
+        self._cal_MB = self.read_s16(self.__BMP085_CAL_MB)  # INT16
+        self._cal_MC = self.read_s16(self.__BMP085_CAL_MC)  # INT16
+        self._cal_MD = self.read_s16(self.__BMP085_CAL_MD)  # INT16
         if self.debug:
             self.show_calibration_data()
 
@@ -184,7 +184,7 @@ class BMP085 :
             UP = 23843
             self._cal_AC6 = 23153
             self._cal_AC5 = 32757
-            self._cal_MB = -32768;
+            self._cal_MB = -32768
             self._cal_MC = -8711
             self._cal_MD = 2868
             self._cal_B1 = 6190
