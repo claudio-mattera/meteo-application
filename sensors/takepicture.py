@@ -6,6 +6,7 @@ from fractions import Fraction
 import argparse
 import logging
 import io
+import typing
 from PIL import Image
 from PIL import ImageStat
 
@@ -31,14 +32,14 @@ CONFIGURATIONS = {
 }
 
 
-def estimate_light():
+def estimate_light() -> float:
     from BH1750 import BH1750
     sensor = BH1750()
     light_level = sensor.read_light()
     return light_level
 
 
-def is_below_light_threshold(threshold):
+def is_below_light_threshold(threshold: float) -> bool:
     try:
         light_level = estimate_light()
         return light_level < threshold
@@ -50,12 +51,12 @@ def is_below_light_threshold(threshold):
         raise
 
 
-def parse_resolution(string):
+def parse_resolution(string: typing.Text) -> typing.Tuple[int, int]:
     [width, height] = string.split('x')
     return (int(width), int(height))
 
 
-def get_configuration(arguments):
+def get_configuration(arguments: typing.Any) -> typing.Any:
     if arguments.light_threshold:
         light_threshold = max(200, arguments.light_threshold)
         if is_below_light_threshold(light_threshold):
@@ -68,7 +69,7 @@ def get_configuration(arguments):
     return configuration
 
 
-def capture_image(arguments):
+def capture_image(arguments: typing.Any) -> Image:
     configuration = get_configuration(arguments)
 
     stream = io.BytesIO()
@@ -93,7 +94,7 @@ def capture_image(arguments):
     return Image.open(stream)
 
 
-def save_image(image, arguments):
+def save_image(image: Image, arguments: typing.Any) -> None:
     if arguments.timestamp:
         timestamp = time.strftime("%Y-%m-%d %H-%M-%S") + ".jpg"
         filename = arguments.filename + timestamp
@@ -103,12 +104,12 @@ def save_image(image, arguments):
     image.save(filename, quality=95, optimize=True)
 
 
-def is_invalid(image):
+def is_invalid(image: Image) -> bool:
     stat = ImageStat.Stat(image)
     return max(stat.stddev) < 1
 
 
-def take_picture(arguments):
+def take_picture(arguments: typing.Any) -> None:
     image = capture_image(arguments)
 
     if is_invalid(image):
@@ -120,17 +121,18 @@ def take_picture(arguments):
 
 
 class StorePairAction(argparse.Action):
-    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+    def __init__(self, option_strings: typing.List[typing.Text], dest: typing.Text, nargs: typing.Text=None, **kwargs: typing.Any) -> None:
         if nargs is not None:
             raise ValueError("nargs not allowed")
         super(StorePairAction, self).__init__(option_strings, dest, **kwargs)
+        self.dest = dest
 
-    def __call__(self, parser, namespace, values, option_string=None):
-        values = parse_resolution(values)
-        setattr(namespace, self.dest, values)
+    def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace, values: typing.Any, option_string: typing.Optional[typing.Text]=None) -> None:
+        parsed_values = parse_resolution(values)
+        setattr(namespace, self.dest, parsed_values)
 
 
-def parse_command_line():
+def parse_command_line() -> typing.Any:
     parser = argparse.ArgumentParser(
         description='Takes a picture with the camera')
     parser.add_argument(

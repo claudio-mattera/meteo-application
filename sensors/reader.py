@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import typing
+
 from Adafruit_BMP085 import BMP085
 from BH1750 import BH1750
 from HTU21D import HTU21D
@@ -12,18 +14,18 @@ class PressureReader(object):
     HIRES_MODE         = 2
     ULTRAHIRES_MODE    = 3
 
-    def __init__(self, mode=STANDARD_MODE, address=0x77):
+    def __init__(self, mode: int=STANDARD_MODE, address: int=0x77) -> None:
         self.bmp = BMP085(address, mode)
 
-    def name(self):
+    def name(self) -> typing.Text:
         return 'pressure'
 
-    def fields(self):
+    def fields(self) -> typing.List[typing.Text]:
         return ['Temperature', 'Pressure', 'Altitude']
 
-    def readValues(self):
-        temperature = self.bmp.readTemperature()
-        pressure = self.bmp.readPressure()
+    def readValues(self) -> typing.Dict[typing.Text, typing.Any]:
+        temperature = self.bmp.read_temperature()
+        pressure = self.bmp.read_pressure()
 
         # To calculate altitude based on an estimated mean sea level pressure
         # (1013.25 hPa) call the function as follows, but this won't be very
@@ -33,7 +35,7 @@ class PressureReader(object):
         # pressure level.  For example, if the current pressure level is 1023.50
         # hPa enter 102350 since we include two decimal places in the integer
         # value altitude = bmp.readAltitude(102350).
-        altitude = self.bmp.readAltitude()
+        altitude = self.bmp.read_altitude()
 
         return {
             'Temperature': temperature,
@@ -44,16 +46,16 @@ class PressureReader(object):
 
 class HumidityReader(object):
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.htu = HTU21D()
 
-    def name(self):
+    def name(self) -> typing.Text:
         return 'humidity'
 
-    def fields(self):
+    def fields(self) -> typing.List[typing.Text]:
         return ['Temperature', 'Humidity']
 
-    def readValues(self):
+    def readValues(self) -> typing.Dict[typing.Text, typing.Any]:
         temperature = self.htu.read_temperature()
         humidity = self.htu.read_humidity()
 
@@ -65,16 +67,16 @@ class HumidityReader(object):
 
 class WindReader(object):
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def name(self):
+    def name(self) -> typing.Text:
         return 'wind'
 
-    def fields(self):
+    def fields(self) -> typing.List[typing.Text]:
         return ['Speed', 'Direction']
 
-    def readValues(self):
+    def readValues(self) -> typing.Dict[typing.Text, typing.Any]:
         speed = None
         direction = None
 
@@ -93,18 +95,18 @@ class LightReader(object):
     ONE_TIME_HIGH_RES_MODE_2   = 0x21
     ONE_TIME_LOW_RES_MODE      = 0x23
 
-    def __init__(self, mode=ONE_TIME_HIGH_RES_MODE_2, address=0x23):
+    def __init__(self, mode: int=ONE_TIME_HIGH_RES_MODE_2, address: int=0x23) -> None:
         self.bh1750 = BH1750(address, mode)
 
-    def name(self):
+    def name(self) -> typing.Text:
         return 'light'
 
-    def fields(self):
+    def fields(self) -> typing.List[typing.Text]:
         return ['Infrared', 'Visible', 'Ultraviolet']
 
-    def readValues(self):
+    def readValues(self) -> typing.Dict[typing.Text, typing.Any]:
         infrared = None
-        visible = self.bh1750.readLight()
+        visible = self.bh1750.read_light()
         ultraviolet = None
 
         return {
@@ -115,16 +117,16 @@ class LightReader(object):
 
 class InternalReader(object):
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def name(self):
+    def name(self) -> typing.Text:
         return 'internal'
 
-    def fields(self):
+    def fields(self) -> typing.List[typing.Text]:
         return ['Temperature']
 
-    def readValues(self):
+    def readValues(self) -> typing.Dict[typing.Text, typing.Any]:
         import subprocess
         args = ['/opt/vc/bin/vcgencmd', 'measure_temp']
         output = subprocess.check_output(args)
@@ -137,17 +139,17 @@ class InternalReader(object):
 
 class PresenceReader(object):
 
-    def __init__(self, known_devices):
+    def __init__(self, known_devices: typing.Dict[typing.Text, typing.Any]) -> None:
         self.wifi = Wifi(known_devices)
 
-    def name(self):
+    def name(self) -> typing.Text:
         return 'presence'
 
-    def fields(self):
+    def fields(self) -> typing.List[typing.Text]:
         return ['Count']
 
-    def readValues(self):
-        presence_count = self.wifi.readPresenceCount()
+    def readValues(self) -> typing.Dict[typing.Text, typing.Any]:
+        presence_count = self.wifi.read_presence_count()
         return {
             'Count': presence_count
         }

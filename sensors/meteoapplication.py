@@ -4,18 +4,20 @@ import logging
 import yaml
 import os
 import imp
+import typing
 from monitor import (
-    SingletonMonitor, DatabaseMonitor, ContinuousMonitorProxy)
+    MonitorInterface, SingletonMonitor, DatabaseMonitor, ContinuousMonitorProxy
+)
 
 
-def load_class(directory, module_name, class_name):
+def load_class(directory: typing.Text, module_name: typing.Text, class_name: typing.Text) -> typing.Any:
     foo = imp.load_source(module_name, directory + "/" + module_name + ".py")
     return getattr(foo, class_name)
 
 
 class Application:
 
-    def run(self):
+    def run(self) -> None:
         directory = os.path.dirname(__file__)
         args = self.parse_command_line()
         self.setup_logging(args)
@@ -46,7 +48,7 @@ class Application:
                 logging.critical("Can't continue for %s: %s" % (class_name, e))
         monitor.run()
 
-    def parse_command_line(self):
+    def parse_command_line(self) -> typing.Any:
         import argparse
 
         parser = argparse.ArgumentParser()
@@ -74,15 +76,15 @@ class Application:
 
         return parser.parse_args()
 
-    def setup_logging(self, args):
+    def setup_logging(self, args: typing.Any) -> None:
         level = logging.DEBUG if args.verbose else logging.INFO
         logging.basicConfig(level=level)
 
-    def retrieve_sensors_information(self, filename):
+    def retrieve_sensors_information(self, filename: typing.Text) -> typing.Dict:
         with open(filename, encoding='utf-8') as file:
             return yaml.load(file)[0]
 
-    def create_monitor(self, args):
+    def create_monitor(self, args: typing.Any) -> MonitorInterface:
         monitor = self.create_basic_monitor(args)
         if args.continuous:
             continuous_monitor = ContinuousMonitorProxy(monitor)
@@ -91,7 +93,7 @@ class Application:
         else:
             return monitor
 
-    def create_basic_monitor(self, args):
+    def create_basic_monitor(self, args: typing.Any) -> MonitorInterface:
         if args.storage == 'dummy':
             return SingletonMonitor()
         elif args.storage == 'db':
@@ -100,7 +102,7 @@ class Application:
             raise RuntimeError("Unknown storage backend \"%s\"" % args.storage)
 
 
-def main():
+def main() -> None:
     application = Application()
     application.run()
 

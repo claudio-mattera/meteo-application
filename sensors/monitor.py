@@ -5,24 +5,42 @@ from threading import Thread
 from datetime import datetime
 import sqlite3
 import logging
+import typing
 
 
-class SingletonMonitor(object):
+Reading = typing.Tuple[typing.Text, typing.Text, datetime, float]
+Sensor = typing.Dict[typing.Text, typing.Any]
+Reader = typing.Tuple[typing.Text, typing.Any, typing.List[Sensor], bool]
+
+
+class MonitorInterface:
+    def run(self) -> None:
+        raise RuntimeError('Unimplemented')
+
+    def attach_reader(self, name: typing.Text, obj: typing.Any, sensors: typing.List[Sensor], use_median: bool) -> None:
+        raise RuntimeError('Unimplemented')
+
+    def store_readings(self, readings: typing.List[Reading]) -> None:
+        raise RuntimeError('Unimplemented')
+
+
+class SingletonMonitor(MonitorInterface):
     """
     Monitors a list of sensor readers once.
     Prints the results to console.
     """
 
-    def __init__(self):
-        self.readers = []
+    def __init__(self) -> None:
+        super(SingletonMonitor, self).__init__()
+        self.readers = []  # type: typing.List[Reader]
 
-    def attach_reader(self, name, obj, sensors, use_median):
+    def attach_reader(self, name: typing.Text, obj: typing.Any, sensors: typing.List[Sensor], use_median: bool) -> None:
         self.readers.append((name, obj, sensors, use_median))
 
-    def run(self):
+    def run(self) -> None:
         logger = logging.getLogger(__name__)
 
-        readings = []
+        readings = []  # type: typing.List[Reading]
 
         for name, obj, sensors, use_median in self.readers:
             for sensor in sensors:
@@ -51,11 +69,11 @@ class SingletonMonitor(object):
                     logger.critical("Error querying %s: %s" % (name, ex))
         self.store_readings(readings)
 
-    def store_readings(self, readings):
+    def store_readings(self, readings: typing.List[Reading]) -> None:
         for name, datatype, date_time, value in readings:
             self._store_reading(name, datatype, date_time, value)
 
-    def _store_reading(self, name, datatype, date_time, value):
+    def _store_reading(self, name: typing.Text, datatype: typing.Text, date_time: datetime, value: float) -> None:
         logger = logging.getLogger(__name__)
         logger.info("%s %s = %r :: %s" % (date_time, name, value, datatype))
 
@@ -66,14 +84,14 @@ class DatabaseMonitor(SingletonMonitor):
     Store the results to a SQLite database.
     """
 
-    def __init__(self, database_path):
+    def __init__(self, database_path: typing.Text) -> None:
         super(DatabaseMonitor, self).__init__()
         self.database_path = database_path
 
         with sqlite3.connect(self.database_path) as connection:
             self.ensure_master_table_exists(connection)
 
-    def attach_reader(self, name, obj, sensors, use_median):
+    def attach_reader(self, name: typing.Text, obj: typing.Any, sensors: typing.List[Sensor], use_median: bool) -> None:
         super(DatabaseMonitor, self).attach_reader(name, obj, sensors, use_median)
 
         with sqlite3.connect(self.database_path) as connection:
@@ -86,21 +104,21 @@ class DatabaseMonitor(SingletonMonitor):
                 self.ensure_table_exists(
                     name, kind, unit, datatype, connection)
 
-    def store_readings(self, readings):
+    def store_readings(self, readings: typing.List[Reading]) -> None:
         logger = logging.getLogger(__name__)
         with sqlite3.connect(self.database_path) as connection:
             logger.debug('Storing %d readings to database' % len(readings))
             for name, datatype, date_time, value in readings:
-                self._store_reading(
+                self._store_reading_db(
                     name, datatype, date_time, value, connection)
 
-    def _store_reading(self, name, datatype, date_time, value, connection):
+    def _store_reading_db(self, name: typing.Text, datatype: typing.Text, date_time: datetime, value: float, connection: typing.Any) -> None:
         connection.execute(
             "INSERT INTO %s (date_time, value) \
              VALUES (?, ?)" % name,
             (date_time.strftime("%Y-%m-%d %H:%M:%S"), value))
 
-    def ensure_table_exists(self, name, kind, unit, datatype, connection):
+    def ensure_table_exists(self, name: typing.Text, kind: typing.Text, unit: typing.Text, datatype: typing.Text, connection: typing.Any) -> None:
         logger = logging.getLogger(__name__)
         logger.debug('Ensuring table %s exists' % name)
 
@@ -117,7 +135,7 @@ class DatabaseMonitor(SingletonMonitor):
             '''INSERT OR IGNORE INTO master (name, kind, unit, datatype) \
                VALUES (?, ?, ?, ?)''', (name, kind, unit, datatype))
 
-    def ensure_master_table_exists(self, connection):
+    def ensure_master_table_exists(self, connection: typing.Any) -> None:
         logger = logging.getLogger(__name__)
         logger.debug('Ensuring master table exists')
 
@@ -131,21 +149,23 @@ class DatabaseMonitor(SingletonMonitor):
                );''')
 
 
-class ContinuousMonitorProxy(object):
+class ContinuousMonitorProxy(MonitorInterface):
     """
     Monitors a list of sensor readers continuously.
     """
 
-    def __init__(self, monitor):
+    def __init__(self, monitor: MonitorInterface) -> None:
+        super(ContinuousMonitorProxy, self).__init__()
+
         self.monitor = monitor
 
         self.interval = 60
         self.isReading = False
 
-    def attach_reader(self, name, obj, sensors, use_median):
+    def attach_reader(self, name: typing.Text, obj: typing.Any, sensors: typing.List[Sensor], use_median: bool) -> None:
         self.monitor.attach_reader(name, obj, sensors, use_median)
 
-    def run(self):
+    def run(self) -> None:
         self.start_monitoring()
 
         try:
@@ -157,12 +177,12 @@ class ContinuousMonitorProxy(object):
 
             self.stop_monitoring()
 
-    def set_interval(self, interval):
+    def set_interval(self, interval: int) -> None:
         logger = logging.getLogger(__name__)
         logger.info("Setting interval to %d seconds" % interval)
         self.interval = int(interval)
 
-    def start_monitoring(self):
+    def start_monitoring(self) -> None:
         if self.isReading:
             return
 
@@ -172,7 +192,7 @@ class ContinuousMonitorProxy(object):
         self.thread = Thread(target=self.keep_monitoring)
         self.thread.start()
 
-    def stop_monitoring(self):
+    def stop_monitoring(self) -> None:
         if not self.isReading:
             return
 
@@ -182,7 +202,7 @@ class ContinuousMonitorProxy(object):
 
         self.isReading = False
 
-    def keep_monitoring(self):
+    def keep_monitoring(self) -> None:
         while self.isReading:
             self.monitor.run()
             sleep(self.interval)

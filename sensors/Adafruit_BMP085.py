@@ -9,7 +9,7 @@ import logging
 # ===========================================================================
 
 class BMP085 :
-    i2c = None
+    i2c = None  # type: Adafruit_I2C
 
     # Operating Modes
     __BMP085_ULTRALOWPOWER     = 0
@@ -49,7 +49,7 @@ class BMP085 :
     _cal_MD = 0
 
 
-    def __init__(self, address=0x77, mode=1, debug=False):
+    def __init__(self, address: int=0x77, mode: int=1, debug: bool=False) -> None:
         self.i2c = Adafruit_I2C(address)
 
         self.address = address
@@ -66,19 +66,19 @@ class BMP085 :
 
         self.read_calibration_data()
 
-    def read_s16(self, register):
+    def read_s16(self, register: int) -> int:
         "Reads a signed 16-bit value"
         hi = self.i2c.readS8(register)
         lo = self.i2c.readU8(register+1)
         return (hi << 8) + lo
 
-    def read_u16(self, register):
+    def read_u16(self, register: int) -> int:
         "Reads an unsigned 16-bit value"
         hi = self.i2c.readU8(register)
         lo = self.i2c.readU8(register+1)
         return (hi << 8) + lo
 
-    def read_calibration_data(self):
+    def read_calibration_data(self) -> None:
         "Reads the calibration data from the IC"
         self._cal_AC1 = self.read_s16(self.__BMP085_CAL_AC1)   # INT16
         self._cal_AC2 = self.read_s16(self.__BMP085_CAL_AC2)   # INT16
@@ -94,7 +94,7 @@ class BMP085 :
         if self.debug:
             self.show_calibration_data()
 
-    def show_calibration_data(self):
+    def show_calibration_data(self) -> None:
         "Displays the calibration values for debugging purposes"
         logger = logging.getLogger(__name__)
         logger.debug("DBG: AC1 = %6d" % (self._cal_AC1))
@@ -109,7 +109,7 @@ class BMP085 :
         logger.debug("DBG: MC  = %6d" % (self._cal_MC))
         logger.debug("DBG: MD  = %6d" % (self._cal_MD))
 
-    def read_raw_temperature(self):
+    def read_raw_temperature(self) -> int:
         "Reads the raw (uncompensated) temperature from the sensor"
         self.i2c.write8(self.__BMP085_CONTROL, self.__BMP085_READTEMPCMD)
         time.sleep(0.005)  # Wait 5ms
@@ -119,7 +119,7 @@ class BMP085 :
             logger.debug("DBG: Raw Temp: 0x%04X (%d)" % (raw & 0xFFFF, raw))
         return raw
 
-    def read_raw_pressure(self):
+    def read_raw_pressure(self) -> int:
         "Reads the raw (uncompensated) pressure level from the sensor"
         self.i2c.write8(self.__BMP085_CONTROL, self.__BMP085_READPRESSURECMD + (self.mode << 6))
         if self.mode == self.__BMP085_ULTRALOWPOWER:
@@ -139,7 +139,7 @@ class BMP085 :
             logger.debug("DBG: Raw Pressure: 0x%04X (%d)" % (raw & 0xFFFF, raw))
         return raw
 
-    def read_temperature(self):
+    def read_temperature(self) -> float:
         "Gets the compensated temperature in degrees celcius"
         UT = 0
         X1 = 0
@@ -158,7 +158,7 @@ class BMP085 :
             logger.debug("DBG: Calibrated temperature = %f C" % temp)
         return temp
 
-    def read_pressure(self):
+    def read_pressure(self) -> float:
         "Gets the compensated pressure in pascal"
         UT = 0
         UP = 0
@@ -260,7 +260,7 @@ class BMP085 :
 
         return float(p)
 
-    def read_altitude(self, sea_level_pressure=101325):
+    def read_altitude(self, sea_level_pressure: float=101325) -> float:
         "Calculates the altitude in meters"
         altitude = 0.0
         pressure = float(self.read_pressure())

@@ -5,6 +5,7 @@ from time import sleep
 from signal import signal, SIGTERM
 import logging
 import argparse
+import typing
 from os import system
 
 
@@ -12,21 +13,21 @@ keep = True
 SHUTDOWN_TIMEOUT_MINUTES = 1
 
 
-def shutdown_callback(pin):
+def shutdown_callback(pin: int) -> None:
     logging.info("Callback called on pin %d" % pin)
     system("shutdown +%d -h" % SHUTDOWN_TIMEOUT_MINUTES)
     global keep
     keep = False
 
 
-def main_loop():
+def main_loop() -> None:
     logging.info('Entering main loop')
     global keep
     while keep:
         sleep(1)
 
 
-def parse_command_line():
+def parse_command_line() -> typing.Any:
     parser = argparse.ArgumentParser(
         description='Handle button press')
     parser.add_argument(
@@ -41,14 +42,14 @@ def parse_command_line():
     return parser.parse_args()
 
 
-def initialize_gpio(arguments):
+def initialize_gpio(arguments: typing.Any) -> None:
     logging.info('Initializing GPIO')
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(
         arguments.shutdown_pin,
         GPIO.IN,
         pull_up_down=GPIO.PUD_UP)
-    
+
     logging.info("Waiting for shutdown event on pin %d"
                  % arguments.shutdown_pin)
     GPIO.add_event_detect(
@@ -58,13 +59,13 @@ def initialize_gpio(arguments):
         bouncetime=3000)
 
 
-def signal_handler(signal, stack_frame):
+def signal_handler(signal: int, stack_frame: typing.Any) -> None:
     logging.info("Received signal %d" % signal)
     global keep
     keep = False
 
 
-def main(arguments):
+def main(arguments: typing.Any) -> None:
     if arguments.verbose:
         logging.basicConfig(level=logging.INFO)
 

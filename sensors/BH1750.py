@@ -9,7 +9,7 @@ import logging
 # ===========================================================================
 
 class BH1750 :
-    i2c = None
+    i2c = None  # type: Adafruit_I2C
 
     __RAW_TO_LUX_COEFFICIENT = 1.2
 
@@ -27,7 +27,7 @@ class BH1750 :
     __BH1750_ONE_TIME_LOW_RES_MODE      = 0x23
 
 
-    def __init__(self, address=__BH1750_I2CADDR, mode=__BH1750_ONE_TIME_HIGH_RES_MODE, debug=False):
+    def __init__(self, address: int=__BH1750_I2CADDR, mode: int=__BH1750_ONE_TIME_HIGH_RES_MODE, debug: bool=False) -> None:
         self.i2c = Adafruit_I2C(address)
 
         self.address = address
@@ -48,13 +48,13 @@ class BH1750 :
         else:
             self.mode = mode
 
-    def read_raw_light(self):
+    def read_raw_light(self) -> int:
         data = self.i2c.readList(self.mode, 2)
         if data == -1:
             return -1
         return ((data[0] << 8) + data[1])
 
-    def read_light(self):
+    def read_light(self) -> float:
         return self.read_raw_light() / self.__RAW_TO_LUX_COEFFICIENT
 
 
