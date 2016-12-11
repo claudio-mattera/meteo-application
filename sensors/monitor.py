@@ -73,8 +73,8 @@ class DatabaseMonitor(SingletonMonitor):
         with sqlite3.connect(self.database_path) as connection:
             self.ensure_master_table_exists(connection)
 
-    def attach_reader(self, name, obj, sensors):
-        super(DatabaseMonitor, self).attach_reader(name, obj, sensors)
+    def attach_reader(self, name, obj, sensors, use_median):
+        super(DatabaseMonitor, self).attach_reader(name, obj, sensors, use_median)
 
         with sqlite3.connect(self.database_path) as connection:
             for sensor in sensors:
@@ -142,8 +142,8 @@ class ContinuousMonitorProxy(object):
         self.interval = 60
         self.isReading = False
 
-    def attach_reader(self, name, obj, sensors):
-        self.monitor.attach_reader(name, obj, sensors)
+    def attach_reader(self, name, obj, sensors, use_median):
+        self.monitor.attach_reader(name, obj, sensors, use_median)
 
     def run(self):
         self.start_monitoring()
